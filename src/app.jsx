@@ -17,7 +17,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <Router>
-          <Toaster 
+          <Toaster
             position="top-right"
             toastOptions={{
               duration: 4000,
