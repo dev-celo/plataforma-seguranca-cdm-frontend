@@ -58,7 +58,7 @@ const Dashboard = () => {
     }
     
     let filtered = reports.filter(r => {
-      const date = parseISO(r.createdAt);
+      const date = parseISO(r.data);
       return isWithinInterval(date, { start: startDate, end: endDate });
     });
     
@@ -78,70 +78,70 @@ const Dashboard = () => {
     };
   };
 
-  const getKPIData = () => {
-    const data = getPeriodData();
-    const reports_array = data.reports;
-    
-    const totalInspecoes = reports_array.reduce((sum, r) => 
-      sum + (r.indicadores?.quantidadeInspecoes || 0), 0);
-    
-    const totalDesvios = reports_array.reduce((sum, r) => 
-      sum + (r.indicadores?.quantidadeDesvios || 0), 0);
-    
-    const totalDDS = reports_array.filter(r => r.ddsRealizado?.tema?.trim()).length;
-    
-    const totalTreinamentos = reports_array.reduce((sum, r) => 
-      sum + (r.treinamentosCampanhas?.length || 0), 0);
-    
-    const totalOrientacoes = reports_array.reduce((sum, r) => 
-      sum + (r.indicadores?.quantidadeOrientacoes || 0), 0);
-    
-    const desvioPercent = totalInspecoes > 0 ? (totalDesvios / totalInspecoes) * 100 : 0;
-    
-    // Calcular conformidade de EPI
-    let epiChecks = 0;
-    let epiConform = 0;
-    reports_array.forEach(r => {
-      const epiInspecao = r.inspecoes?.find(i => i.includes('EPIs'));
-      if (epiInspecao) {
-        epiChecks++;
-        if (epiInspecao.includes('OK') || epiInspecao.includes('Conforme')) {
-          epiConform++;
-        }
+ const getKPIData = () => {
+  const data = getPeriodData();
+  const reports_array = data.reports;
+  
+  const totalInspecoes = reports_array.reduce((sum, r) => 
+    sum + (r.indicadores?.quantidadeInspecoes || 0), 0);
+  
+  const totalDesvios = reports_array.reduce((sum, r) => 
+    sum + (r.indicadores?.quantidadeDesvios || 0), 0);
+  
+  const totalDDS = reports_array.filter(r => r.ddsRealizado?.tema?.trim()).length;
+  
+  const totalTreinamentos = reports_array.reduce((sum, r) => 
+    sum + (r.treinamentosCampanhas?.length || 0), 0);
+  
+  const totalOrientacoes = reports_array.reduce((sum, r) => 
+    sum + (r.indicadores?.quantidadeOrientacoes || 0), 0);
+  
+  const desvioPercent = totalInspecoes > 0 ? (totalDesvios / totalInspecoes) * 100 : 0;
+  
+  // 🔥 CORREÇÃO: Calcular conformidade de EPI (inspecoes é objeto)
+  let epiChecks = 0;
+  let epiConform = 0;
+  reports_array.forEach(r => {
+    // Verifica se o campo inspecoes existe e se tem a propriedade epi
+    if (r.inspecoes && typeof r.inspecoes.epi !== 'undefined') {
+      epiChecks++;
+      if (r.inspecoes.epi === true) {
+        epiConform++;
       }
-    });
-    const epiPercent = epiChecks > 0 ? (epiConform / epiChecks) * 100 : 100;
-    
-    // Classificação dos desvios
-    let desviosLeves = 0, desviosModerados = 0, desviosGraves = 0;
-    reports_array.forEach(r => {
-      desviosLeves += r.classificacaoDesvios?.desvioLeve || 0;
-      desviosModerados += r.classificacaoDesvios?.desvioModerado || 0;
-      desviosGraves += r.classificacaoDesvios?.desvioGrave || 0;
-    });
-    
-    // Condição geral da área
-    const condicoes = {
-      segura: reports_array.filter(r => r.condicaoGeralArea === 'Segura').length,
-      atencao: reports_array.filter(r => r.condicaoGeralArea === 'Atenção').length,
-      critica: reports_array.filter(r => r.condicaoGeralArea === 'Crítica').length
-    };
-    
-    return {
-      totalInspecoes,
-      totalDesvios,
-      desvioPercent,
-      totalDDS,
-      totalTreinamentos,
-      totalOrientacoes,
-      epiPercent,
-      desviosLeves,
-      desviosModerados,
-      desviosGraves,
-      condicoes,
-      totalReports: reports_array.length
-    };
+    }
+  });
+  const epiPercent = epiChecks > 0 ? (epiConform / epiChecks) * 100 : 100;
+  
+  // Classificação dos desvios
+  let desviosLeves = 0, desviosModerados = 0, desviosGraves = 0;
+  reports_array.forEach(r => {
+    desviosLeves += r.classificacaoDesvios?.desvioLeve || 0;
+    desviosModerados += r.classificacaoDesvios?.desvioModerado || 0;
+    desviosGraves += r.classificacaoDesvios?.desvioGrave || 0;
+  });
+  
+  // Condição geral da área
+  const condicoes = {
+    segura: reports_array.filter(r => r.condicaoGeralArea === 'Segura').length,
+    atencao: reports_array.filter(r => r.condicaoGeralArea === 'Atenção').length,
+    critica: reports_array.filter(r => r.condicaoGeralArea === 'Crítica').length
   };
+  
+  return {
+    totalInspecoes,
+    totalDesvios,
+    desvioPercent,
+    totalDDS,
+    totalTreinamentos,
+    totalOrientacoes,
+    epiPercent,
+    desviosLeves,
+    desviosModerados,
+    desviosGraves,
+    condicoes,
+    totalReports: reports_array.length
+  };
+};
 
   if (loading) {
     return (

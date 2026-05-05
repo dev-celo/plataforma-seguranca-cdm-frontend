@@ -8,9 +8,7 @@ import toast from 'react-hot-toast';
 import {
   FileText,
   Eye,
-  Download,
   Search,
-  Filter,
   Calendar,
   User,
   MapPin,
@@ -19,7 +17,8 @@ import {
   Clock,
   ChevronLeft,
   ChevronRight,
-  Loader2
+  Loader2,
+  HardHat
 } from 'lucide-react';
 
 const ReportList = () => {
@@ -93,7 +92,7 @@ const ReportList = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-cdm-500" />
       </div>
     );
   }
@@ -183,7 +182,7 @@ const ReportList = () => {
                     </span>
                     <span className="text-xs text-gray-500 flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      {format(parseISO(report.createdAt), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                      {format(parseISO(report.data), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                     </span>
                     <span className="text-xs text-gray-500 flex items-center gap-1">
                       <Clock className="w-3 h-3" />
@@ -207,7 +206,11 @@ const ReportList = () => {
                     )}
                     <span className="flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" />
-                      Desvios: {report.desviosIdentificados?.filter(d => d.trim()).length || 0}
+                      Desvios: {report.desviosIdentificados?.filter(d => d.descricao?.trim()).length || 0}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <HardHat className="w-3 h-3" />
+                      Desvios EPI: {report.desviosIdentificados?.filter(d => d.relacionadoEPI && d.descricao?.trim()).length || 0}
                     </span>
                   </div>
                 </div>
@@ -217,7 +220,7 @@ const ReportList = () => {
                       e.stopPropagation();
                       handleViewDetails(report);
                     }}
-                    className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/20 text-blue-600 hover:bg-blue-200 dark:hover:bg-blue-900/40 transition-colors"
+                    className="p-2 rounded-lg bg-cdm-100 dark:bg-cdm-900/20 text-cdm-600 hover:bg-cdm-200 dark:hover:bg-cdm-900/40 transition-colors"
                   >
                     <Eye className="w-5 h-5" />
                   </button>
@@ -238,7 +241,7 @@ const ReportList = () => {
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <span className="px-4 py-2 rounded-lg bg-blue-600 text-white">
+          <span className="px-4 py-2 rounded-lg bg-cdm-500 text-white">
             {currentPage} / {totalPages}
           </span>
           <button
@@ -270,7 +273,7 @@ const ReportList = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Data</p>
-                  <p className="font-medium">{format(parseISO(selectedReport.createdAt), "dd/MM/yyyy")}</p>
+                  <p className="font-medium">{format(parseISO(selectedReport.data), "dd/MM/yyyy")}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Turno</p>
@@ -296,7 +299,7 @@ const ReportList = () => {
               <div>
                 <p className="text-sm text-gray-500">Atividades Acompanhadas</p>
                 <ul className="list-disc list-inside">
-                  {selectedReport.atividadesAcompanhadas?.map((atividade, i) => (
+                  {selectedReport.atividadesAcompanhadas?.filter(a => a.trim()).map((atividade, i) => (
                     <li key={i}>{atividade}</li>
                   ))}
                 </ul>
@@ -304,11 +307,67 @@ const ReportList = () => {
               
               <div>
                 <p className="text-sm text-gray-500">Desvios Identificados</p>
-                <ul className="list-disc list-inside">
-                  {selectedReport.desviosIdentificados?.map((desvio, i) => (
-                    <li key={i}>{desvio}</li>
+                <ul className="list-disc list-inside space-y-1">
+                  {selectedReport.desviosIdentificados?.filter(d => d.descricao?.trim()).map((desvio, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span>{desvio.descricao}</span>
+                      {desvio.relacionadoEPI && (
+                        <span className="inline-flex items-center gap-1 text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded">
+                          <HardHat className="w-3 h-3" />
+                          Relacionado a EPI
+                        </span>
+                      )}
+                    </li>
                   ))}
                 </ul>
+              </div>
+              
+              <div>
+                <p className="text-sm text-gray-500">Ações Corretivas</p>
+                <ul className="list-disc list-inside">
+                  {selectedReport.acoesCorretivas?.filter(a => a.trim()).map((acao, i) => (
+                    <li key={i}>{acao}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">Ações Preventivas</p>
+                <ul className="list-disc list-inside">
+                  {selectedReport.acoesPreventivas?.filter(a => a.trim()).map((acao, i) => (
+                    <li key={i}>{acao}</li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div>
+                <p className="text-sm text-gray-500">Orientações em Campo</p>
+                <ul className="list-disc list-inside">
+                  {selectedReport.orientacoesCampo?.filter(o => o.trim()).map((orientacao, i) => (
+                    <li key={i}>{orientacao}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">Ferramentas de Segurança</p>
+                <div className="flex gap-3 mt-1">
+                  {selectedReport.ferramentasSeguranca?.pare && <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-sm">PARE</span>}
+                  {selectedReport.ferramentasSeguranca?.rqa && <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-sm">RQA</span>}
+                  {selectedReport.ferramentasSeguranca?.vfl && <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-sm">VFL</span>}
+                  {!selectedReport.ferramentasSeguranca?.pare && !selectedReport.ferramentasSeguranca?.rqa && !selectedReport.ferramentasSeguranca?.vfl && (
+                    <span className="text-gray-500 text-sm">Nenhuma ferramenta registrada</span>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">Classificação dos Desvios</p>
+                <div className="flex gap-3 mt-1">
+                  <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 rounded-lg text-sm">Leves: {selectedReport.classificacaoDesvios?.desvioLeve || 0}</span>
+                  <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg text-sm">Moderados: {selectedReport.classificacaoDesvios?.desvioModerado || 0}</span>
+                  <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 rounded-lg text-sm">Graves: {selectedReport.classificacaoDesvios?.desvioGrave || 0}</span>
+                </div>
               </div>
               
               <div>
@@ -318,11 +377,21 @@ const ReportList = () => {
                   {selectedReport.condicaoGeralArea}
                 </span>
               </div>
+
+              <div>
+                <p className="text-sm text-gray-500">Indicadores</p>
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm">Inspeções: {selectedReport.indicadores?.quantidadeInspecoes || 0}</span>
+                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm">Desvios: {selectedReport.indicadores?.quantidadeDesvios || 0}</span>
+                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm">Orientações: {selectedReport.indicadores?.quantidadeOrientacoes || 0}</span>
+                  <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm">Desvios EPI: {selectedReport.indicadores?.desviosEPI || 0}</span>
+                </div>
+              </div>
               
               {selectedReport.observacoesGerais && (
                 <div>
                   <p className="text-sm text-gray-500">Observações</p>
-                  <p className="font-medium">{selectedReport.observacoesGerais}</p>
+                  <p className="font-medium text-sm">{selectedReport.observacoesGerais}</p>
                 </div>
               )}
             </div>

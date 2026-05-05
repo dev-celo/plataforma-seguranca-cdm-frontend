@@ -27,7 +27,7 @@ const Charts = ({ reports }) => {
   const evolutionData = reports
     .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
     .map(report => ({
-      date: format(parseISO(report.createdAt), 'dd/MM', { locale: ptBR }),
+      date: format(parseISO(report.data), 'dd/MM', { locale: ptBR }),
       desvios: report.indicadores?.quantidadeDesvios || 0,
       inspecoes: report.indicadores?.quantidadeInspecoes || 0,
       orientacoes: report.indicadores?.quantidadeOrientacoes || 0
