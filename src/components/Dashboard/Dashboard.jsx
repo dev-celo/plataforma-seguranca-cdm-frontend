@@ -1,39 +1,55 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { getReports } from '../../services/api';
-import KPICards from './KPICards';
-import Charts from './Charts';
-import ComparativeAnalysis from './ComparativeAnalysis';
-import { 
-  startOfWeek, 
-  endOfWeek, 
-  subDays, 
-  isWithinInterval, 
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { getReports } from "../../services/api";
+import KPICards from "./KPICards";
+import Charts from "./Charts";
+import ComparativeAnalysis from "./ComparativeAnalysis";
+import {
+  startOfWeek,
+  endOfWeek,
+  subDays,
+  isWithinInterval,
   parseISO,
-  format 
-} from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { getMissingDaysInfo } from '../../utils/dateUtils';
-import { Calendar, TrendingUp, AlertCircle, HardHat, Loader2, Building2 } from 'lucide-react';
+  format,
+} from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { getMissingDaysInfo } from "../../utils/dateUtils";
+import {
+  Calendar,
+  TrendingUp,
+  AlertCircle,
+  HardHat,
+  Loader2,
+  Building2,
+} from "lucide-react";
 
 const Dashboard = () => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState('week');
-  const [selectedTST, setSelectedTST] = useState('all');
+  const [period, setPeriod] = useState("week");
+  const [selectedTST, setSelectedTST] = useState("all");
 
   useEffect(() => {
     loadReports();
   }, []);
 
   const loadReports = async () => {
+    setLoading(true);
     try {
       const response = await getReports();
-      if (response.success) {
+      console.log("Resposta bruta do getReports:", response); // Log da resposta
+
+      // Se a resposta for bem-sucedida e tiver a propriedade 'data'
+      if (response.success && Array.isArray(response.data)) {
+        console.log("Relatórios carregados:", response.data.length);
         setReports(response.data);
+      } else {
+        console.error("Formato de resposta inesperado:", response);
+        toast.error("Erro no formato dos dados recebidos do servidor.");
       }
     } catch (error) {
-      console.error('Error loading reports:', error);
+      console.error("Error loading reports:", error);
+      toast.error("Erro ao carregar relatórios");
     } finally {
       setLoading(false);
     }
@@ -42,113 +58,131 @@ const Dashboard = () => {
   const getPeriodData = () => {
     const now = new Date();
     let startDate, endDate, label;
-    
-    if (period === 'week') {
+
+    if (period === "week") {
       startDate = startOfWeek(now, { locale: ptBR });
       endDate = endOfWeek(now, { locale: ptBR });
-      label = 'Esta Semana';
-    } else if (period === '15days') {
+      label = "Esta Semana";
+    } else if (period === "15days") {
       startDate = subDays(now, 15);
       endDate = now;
-      label = 'Últimos 15 Dias';
+      label = "Últimos 15 Dias";
     } else {
       startDate = subDays(now, 30);
       endDate = now;
-      label = 'Último Mês';
+      label = "Último Mês";
     }
-    
-    let filtered = reports.filter(r => {
+
+    let filtered = reports.filter((r) => {
       const date = parseISO(r.data);
       return isWithinInterval(date, { start: startDate, end: endDate });
     });
-    
-    if (selectedTST !== 'all') {
-      filtered = filtered.filter(r => r.tstResponsavel === selectedTST);
+
+    if (selectedTST !== "all") {
+      filtered = filtered.filter((r) => r.tstResponsavel === selectedTST);
     }
-    
+
     const missingInfo = getMissingDaysInfo(filtered, startDate, endDate);
-    
+
     return {
       reports: filtered,
       missingInfo,
       startDate,
       endDate,
       label,
-      totalReports: filtered.length
+      totalReports: filtered.length,
     };
   };
 
- const getKPIData = () => {
-  const data = getPeriodData();
-  const reports_array = data.reports;
-  
-  const totalInspecoes = reports_array.reduce((sum, r) => 
-    sum + (r.indicadores?.quantidadeInspecoes || 0), 0);
-  
-  const totalDesvios = reports_array.reduce((sum, r) => 
-    sum + (r.indicadores?.quantidadeDesvios || 0), 0);
-  
-  const totalDDS = reports_array.filter(r => r.ddsRealizado?.tema?.trim()).length;
-  
-  const totalTreinamentos = reports_array.reduce((sum, r) => 
-    sum + (r.treinamentosCampanhas?.length || 0), 0);
-  
-  const totalOrientacoes = reports_array.reduce((sum, r) => 
-    sum + (r.indicadores?.quantidadeOrientacoes || 0), 0);
-  
-  const desvioPercent = totalInspecoes > 0 ? (totalDesvios / totalInspecoes) * 100 : 0;
-  
-  // 🔥 CORREÇÃO: Calcular conformidade de EPI (inspecoes é objeto)
-  let epiChecks = 0;
-  let epiConform = 0;
-  reports_array.forEach(r => {
-    // Verifica se o campo inspecoes existe e se tem a propriedade epi
-    if (r.inspecoes && typeof r.inspecoes.epi !== 'undefined') {
-      epiChecks++;
-      if (r.inspecoes.epi === true) {
-        epiConform++;
+  const getKPIData = () => {
+    const data = getPeriodData();
+    const reports_array = data.reports;
+
+    const totalInspecoes = reports_array.reduce(
+      (sum, r) => sum + (r.indicadores?.quantidadeInspecoes || 0),
+      0,
+    );
+
+    const totalDesvios = reports_array.reduce(
+      (sum, r) => sum + (r.indicadores?.quantidadeDesvios || 0),
+      0,
+    );
+
+    const totalDDS = reports_array.filter((r) =>
+      r.ddsRealizado?.tema?.trim(),
+    ).length;
+
+    const totalTreinamentos = reports_array.reduce(
+      (sum, r) => sum + (r.treinamentosCampanhas?.length || 0),
+      0,
+    );
+
+    const totalOrientacoes = reports_array.reduce(
+      (sum, r) => sum + (r.indicadores?.quantidadeOrientacoes || 0),
+      0,
+    );
+
+    const desvioPercent =
+      totalInspecoes > 0 ? (totalDesvios / totalInspecoes) * 100 : 0;
+
+    // 🔥 CORREÇÃO: Calcular conformidade de EPI (inspecoes é objeto)
+    let epiChecks = 0;
+    let epiConform = 0;
+    reports_array.forEach((r) => {
+      // Verifica se o campo inspecoes existe e se tem a propriedade epi
+      if (r.inspecoes && typeof r.inspecoes.epi !== "undefined") {
+        epiChecks++;
+        if (r.inspecoes.epi === true) {
+          epiConform++;
+        }
       }
-    }
-  });
-  const epiPercent = epiChecks > 0 ? (epiConform / epiChecks) * 100 : 100;
-  
-  // Classificação dos desvios
-  let desviosLeves = 0, desviosModerados = 0, desviosGraves = 0;
-  reports_array.forEach(r => {
-    desviosLeves += r.classificacaoDesvios?.desvioLeve || 0;
-    desviosModerados += r.classificacaoDesvios?.desvioModerado || 0;
-    desviosGraves += r.classificacaoDesvios?.desvioGrave || 0;
-  });
-  
-  // Condição geral da área
-  const condicoes = {
-    segura: reports_array.filter(r => r.condicaoGeralArea === 'Segura').length,
-    atencao: reports_array.filter(r => r.condicaoGeralArea === 'Atenção').length,
-    critica: reports_array.filter(r => r.condicaoGeralArea === 'Crítica').length
+    });
+    const epiPercent = epiChecks > 0 ? (epiConform / epiChecks) * 100 : 100;
+
+    // Classificação dos desvios
+    let desviosLeves = 0,
+      desviosModerados = 0,
+      desviosGraves = 0;
+    reports_array.forEach((r) => {
+      desviosLeves += r.classificacaoDesvios?.desvioLeve || 0;
+      desviosModerados += r.classificacaoDesvios?.desvioModerado || 0;
+      desviosGraves += r.classificacaoDesvios?.desvioGrave || 0;
+    });
+
+    // Condição geral da área
+    const condicoes = {
+      segura: reports_array.filter((r) => r.condicaoGeralArea === "Segura")
+        .length,
+      atencao: reports_array.filter((r) => r.condicaoGeralArea === "Atenção")
+        .length,
+      critica: reports_array.filter((r) => r.condicaoGeralArea === "Crítica")
+        .length,
+    };
+
+    return {
+      totalInspecoes,
+      totalDesvios,
+      desvioPercent,
+      totalDDS,
+      totalTreinamentos,
+      totalOrientacoes,
+      epiPercent,
+      desviosLeves,
+      desviosModerados,
+      desviosGraves,
+      condicoes,
+      totalReports: reports_array.length,
+    };
   };
-  
-  return {
-    totalInspecoes,
-    totalDesvios,
-    desvioPercent,
-    totalDDS,
-    totalTreinamentos,
-    totalOrientacoes,
-    epiPercent,
-    desviosLeves,
-    desviosModerados,
-    desviosGraves,
-    condicoes,
-    totalReports: reports_array.length
-  };
-};
 
   if (loading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-cdm-500 mx-auto mb-4" />
-          <p className="text-gray-500 dark:text-gray-400">Carregando dashboard...</p>
+          <p className="text-gray-500 dark:text-gray-400">
+            Carregando dashboard...
+          </p>
         </div>
       </div>
     );
@@ -181,7 +215,7 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="flex gap-3">
           <select
             value={selectedTST}
@@ -192,7 +226,7 @@ const Dashboard = () => {
             <option value="Mônica">Mônica</option>
             <option value="Vannic">Vannic</option>
           </select>
-          
+
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
@@ -219,9 +253,11 @@ const Dashboard = () => {
                 Atenção: Dias não trabalhados identificados
               </p>
               <p className="text-sm text-yellow-700 dark:text-yellow-500">
-                No período de {format(periodData.startDate, 'dd/MM/yyyy')} a {format(periodData.endDate, 'dd/MM/yyyy')}, 
-                tivemos {periodData.missingInfo.missingDays} dia(s) não trabalhado(s) 
-                (feriados ou finais de semana). Total de {periodData.missingInfo.totalWorkingDays} dias úteis no período.
+                No período de {format(periodData.startDate, "dd/MM/yyyy")} a{" "}
+                {format(periodData.endDate, "dd/MM/yyyy")}, tivemos{" "}
+                {periodData.missingInfo.missingDays} dia(s) não trabalhado(s)
+                (feriados ou finais de semana). Total de{" "}
+                {periodData.missingInfo.totalWorkingDays} dias úteis no período.
               </p>
             </div>
           </div>
@@ -254,16 +290,28 @@ const Dashboard = () => {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-green-600">{kpiData.desviosLeves}</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Desvios Leves</p>
+            <p className="text-2xl font-bold text-green-600">
+              {kpiData.desviosLeves}
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Desvios Leves
+            </p>
           </div>
           <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-yellow-600">{kpiData.desviosModerados}</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Desvios Moderados</p>
+            <p className="text-2xl font-bold text-yellow-600">
+              {kpiData.desviosModerados}
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Desvios Moderados
+            </p>
           </div>
           <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-red-600">{kpiData.desviosGraves}</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Desvios Graves</p>
+            <p className="text-2xl font-bold text-red-600">
+              {kpiData.desviosGraves}
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Desvios Graves
+            </p>
           </div>
         </div>
       </motion.div>
@@ -281,15 +329,21 @@ const Dashboard = () => {
         </h3>
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center p-4 bg-green-100 dark:bg-green-900/30 rounded-xl">
-            <p className="text-2xl font-bold text-green-600">{kpiData.condicoes.segura}</p>
+            <p className="text-2xl font-bold text-green-600">
+              {kpiData.condicoes.segura}
+            </p>
             <p className="text-sm text-gray-600 dark:text-gray-400">Segura</p>
           </div>
           <div className="text-center p-4 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl">
-            <p className="text-2xl font-bold text-yellow-600">{kpiData.condicoes.atencao}</p>
+            <p className="text-2xl font-bold text-yellow-600">
+              {kpiData.condicoes.atencao}
+            </p>
             <p className="text-sm text-gray-600 dark:text-gray-400">Atenção</p>
           </div>
           <div className="text-center p-4 bg-red-100 dark:bg-red-900/30 rounded-xl">
-            <p className="text-2xl font-bold text-red-600">{kpiData.condicoes.critica}</p>
+            <p className="text-2xl font-bold text-red-600">
+              {kpiData.condicoes.critica}
+            </p>
             <p className="text-sm text-gray-600 dark:text-gray-400">Crítica</p>
           </div>
         </div>

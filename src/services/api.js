@@ -23,6 +23,7 @@ export const createReport = async (data) => {
 
 export const getReports = async (params = {}) => {
   const response = await api.get('/reports', { params });
+  console.log('Resposta da API /reports:', response.data);
   return response.data;
 };
 
