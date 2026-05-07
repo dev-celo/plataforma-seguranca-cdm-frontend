@@ -1,4 +1,5 @@
 import React from 'react';
+
 import {
   ResponsiveContainer,
   AreaChart,
@@ -15,7 +16,18 @@ import {
   Cell,
 } from 'recharts';
 
+import {
+  ShieldCheck,
+  AlertTriangle,
+  ClipboardCheck,
+  TrendingUp,
+} from 'lucide-react';
+
 import { motion } from 'framer-motion';
+
+// ============================
+// PALETA PREMIUM APPLE/SAAS
+// ============================
 
 const COLORS = {
   background: '#F5F7FA',
@@ -35,11 +47,15 @@ const COLORS = {
   atencao: '#F59E0B',
   critica: '#EF4444',
 
-  shadow: '0 10px 30px rgba(15,23,42,0.08)',
+  moderate: '#FB923C',
 };
 
+// ============================
+// ANIMAÇÕES
+// ============================
+
 const cardAnimation = {
-  initial: { opacity: 0, y: 24 },
+  initial: { opacity: 0, y: 22 },
   animate: { opacity: 1, y: 0 },
   transition: {
     duration: 0.7,
@@ -47,7 +63,14 @@ const cardAnimation = {
   },
 };
 
-const GlassCard = ({ children, className = '' }) => (
+// ============================
+// GLASS CARD
+// ============================
+
+const GlassCard = ({
+  children,
+  className = '',
+}) => (
   <motion.div
     {...cardAnimation}
     whileHover={{
@@ -55,13 +78,15 @@ const GlassCard = ({ children, className = '' }) => (
       scale: 1.005,
     }}
     className={`
-      rounded-[28px]
+      rounded-[30px]
       border
-      border-white/40
-      backdrop-blur-xl
+      border-white/50
       bg-white/70
+      backdrop-blur-xl
       shadow-[0_10px_30px_rgba(15,23,42,0.08)]
       p-7
+      transition-all
+      duration-300
       ${className}
     `}
   >
@@ -69,43 +94,115 @@ const GlassCard = ({ children, className = '' }) => (
   </motion.div>
 );
 
-const SectionTitle = ({ title }) => (
-  <div className="flex items-center justify-between mb-7">
-    <div>
-      <h3 className="text-[22px] font-semibold text-slate-900 tracking-[-0.02em]">
-        {title}
-      </h3>
+// ============================
+// TITULO
+// ============================
 
-      <div className="w-14 h-1 rounded-full bg-slate-900/10 mt-3" />
-    </div>
+const SectionTitle = ({
+  title,
+  subtitle,
+}) => (
+  <div className="mb-8">
+
+    <h3 className="text-[22px] font-semibold tracking-[-0.03em] text-slate-900">
+      {title}
+    </h3>
+
+    {subtitle && (
+      <p className="text-sm text-slate-500 mt-1">
+        {subtitle}
+      </p>
+    )}
+
+    <div className="w-16 h-1 rounded-full bg-slate-900/10 mt-4" />
+
   </div>
 );
 
-const LegendItem = ({ color, label }) => (
+// ============================
+// LEGENDA
+// ============================
+
+const LegendItem = ({
+  color,
+  label,
+}) => (
   <div className="flex items-center gap-2">
+
     <div
       className="w-2.5 h-2.5 rounded-full"
       style={{ background: color }}
     />
 
-    <span className="text-sm text-slate-500 font-medium">
+    <span className="text-sm font-medium text-slate-500">
       {label}
     </span>
+
   </div>
 );
 
-const TooltipStyle = {
+// ============================
+// TOOLTIP
+// ============================
+
+const tooltipStyle = {
   background: 'rgba(255,255,255,0.92)',
-  border: '1px solid rgba(255,255,255,0.4)',
+  border: '1px solid rgba(255,255,255,0.5)',
   borderRadius: '18px',
   boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
   backdropFilter: 'blur(12px)',
   color: '#111827',
 };
 
+// ============================
+// KPI CARD
+// ============================
+
+const KpiCard = ({
+  title,
+  value,
+  icon,
+  color,
+}) => (
+  <GlassCard>
+
+    <div className="flex items-start justify-between">
+
+      <div>
+
+        <p className="text-sm font-medium text-slate-500">
+          {title}
+        </p>
+
+        <h2 className="text-4xl font-bold tracking-[-0.05em] text-slate-900 mt-3">
+          {value}
+        </h2>
+
+      </div>
+
+      <div
+        className="w-14 h-14 rounded-2xl flex items-center justify-center"
+        style={{
+          background: `${color}15`,
+        }}
+      >
+        {icon}
+      </div>
+
+    </div>
+
+  </GlassCard>
+);
+
+// ============================
+// COMPONENTE
+// ============================
+
 const Charts = ({ reports }) => {
 
-  // ==================== EVOLUTION ====================
+  // ============================
+  // EVOLUTION
+  // ============================
 
   const evolutionData = reports
     .sort((a, b) => new Date(a.data) - new Date(b.data))
@@ -125,12 +222,45 @@ const Charts = ({ reports }) => {
         Number(report.indicadores?.quantidadeOrientacoes || 0),
     }));
 
-  // ==================== TST ====================
+  // ============================
+  // KPI TOTALS
+  // ============================
+
+  const totalInspecoes = reports.reduce(
+    (acc, report) =>
+      acc + Number(report.indicadores?.quantidadeInspecoes || 0),
+    0
+  );
+
+  const totalDesvios = reports.reduce(
+    (acc, report) =>
+      acc + Number(report.indicadores?.quantidadeDesvios || 0),
+    0
+  );
+
+  const totalOrientacoes = reports.reduce(
+    (acc, report) =>
+      acc + Number(report.indicadores?.quantidadeOrientacoes || 0),
+    0
+  );
+
+  const taxaGeral =
+    totalInspecoes > 0
+      ? (
+          (totalDesvios / totalInspecoes) * 100
+        ).toFixed(1)
+      : 0;
+
+  // ============================
+  // TST
+  // ============================
 
   const tstMap = {};
 
   reports.forEach(report => {
-    const tst = report.tstResponsavel || 'Não informado';
+
+    const tst =
+      report.tstResponsavel || 'Não informado';
 
     if (!tstMap[tst]) {
       tstMap[tst] = {
@@ -146,20 +276,16 @@ const Charts = ({ reports }) => {
       Number(report.indicadores?.quantidadeInspecoes || 0);
   });
 
-  const tstChartData = Object.entries(tstMap).map(([name, data]) => ({
-    name,
-    desvios: data.desvios,
-    inspecoes: data.inspecoes,
+  const tstChartData =
+    Object.entries(tstMap).map(([name, data]) => ({
+      name,
+      desvios: data.desvios,
+      inspecoes: data.inspecoes,
+    }));
 
-    taxa:
-      data.inspecoes > 0
-        ? Number(
-            ((data.desvios / data.inspecoes) * 100).toFixed(1)
-          )
-        : 0,
-  }));
-
-  // ==================== CLASSIFICAÇÃO ====================
+  // ============================
+  // CLASSIFICAÇÃO
+  // ============================
 
   const classificacaoData = [
     {
@@ -171,7 +297,7 @@ const Charts = ({ reports }) => {
     {
       name: 'Moderados',
       value: 0,
-      color: '#FB923C',
+      color: COLORS.moderate,
     },
 
     {
@@ -182,6 +308,7 @@ const Charts = ({ reports }) => {
   ];
 
   reports.forEach(report => {
+
     if (report.classificacaoDesvios) {
 
       classificacaoData[0].value +=
@@ -195,19 +322,24 @@ const Charts = ({ reports }) => {
     }
   });
 
-  const totalDesvios =
-    classificacaoData.reduce((acc, item) => acc + item.value, 0);
-
-  // ==================== CONDIÇÃO ====================
+  // ============================
+  // CONDIÇÃO GERAL
+  // ============================
 
   const seguraCount =
-    reports.filter(r => r.condicaoGeralArea === 'Segura').length;
+    reports.filter(
+      r => r.condicaoGeralArea === 'Segura'
+    ).length;
 
   const atencaoCount =
-    reports.filter(r => r.condicaoGeralArea === 'Atenção').length;
+    reports.filter(
+      r => r.condicaoGeralArea === 'Atenção'
+    ).length;
 
   const criticaCount =
-    reports.filter(r => r.condicaoGeralArea === 'Crítica').length;
+    reports.filter(
+      r => r.condicaoGeralArea === 'Crítica'
+    ).length;
 
   const totalCondicoes =
     seguraCount + atencaoCount + criticaCount;
@@ -232,23 +364,118 @@ const Charts = ({ reports }) => {
     },
   ];
 
+  // ============================
+  // TOP DESVIOS
+  // ============================
+
+  const topDesviosMap = {};
+
+  reports.forEach(report => {
+
+    if (report.desvios && Array.isArray(report.desvios)) {
+
+      report.desvios.forEach(item => {
+
+        const tipo =
+          item.tipo || item.nome || 'Não identificado';
+
+        if (!topDesviosMap[tipo]) {
+          topDesviosMap[tipo] = 0;
+        }
+
+        topDesviosMap[tipo] += 1;
+      });
+    }
+  });
+
+  const topDesvios =
+    Object.entries(topDesviosMap)
+      .map(([name, value]) => ({
+        name,
+        value,
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+
   return (
+
     <div className="space-y-7">
 
-      {/* ================= HERO CHART ================= */}
+      {/* ===================================== */}
+      {/* KPI SECTION */}
+      {/* ===================================== */}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-7">
+
+        <KpiCard
+          title="Inspeções"
+          value={totalInspecoes}
+          color={COLORS.inspecoes}
+          icon={
+            <ClipboardCheck
+              size={28}
+              color={COLORS.inspecoes}
+            />
+          }
+        />
+
+        <KpiCard
+          title="Desvios"
+          value={totalDesvios}
+          color={COLORS.desvios}
+          icon={
+            <AlertTriangle
+              size={28}
+              color={COLORS.desvios}
+            />
+          }
+        />
+
+        <KpiCard
+          title="Orientações"
+          value={totalOrientacoes}
+          color={COLORS.orientacoes}
+          icon={
+            <ShieldCheck
+              size={28}
+              color={COLORS.orientacoes}
+            />
+          }
+        />
+
+        <KpiCard
+          title="Taxa Geral"
+          value={`${taxaGeral}%`}
+          color={COLORS.atencao}
+          icon={
+            <TrendingUp
+              size={28}
+              color={COLORS.atencao}
+            />
+          }
+        />
+
+      </div>
+
+      {/* ===================================== */}
+      {/* HERO CHART */}
+      {/* ===================================== */}
 
       <GlassCard>
 
-        <SectionTitle title="Evolução dos Indicadores" />
+        <SectionTitle
+          title="Evolução dos Indicadores"
+          subtitle="Análise temporal das inspeções, desvios e orientações"
+        />
 
-        <ResponsiveContainer width="100%" height={420}>
+        <ResponsiveContainer width="100%" height={430}>
 
           <AreaChart
             data={evolutionData}
             margin={{
-              top: 20,
+              top: 10,
               right: 10,
-              left: -10,
+              left: -15,
               bottom: 0,
             }}
           >
@@ -262,6 +489,7 @@ const Charts = ({ reports }) => {
                 x2="0"
                 y2="1"
               >
+
                 <stop
                   offset="5%"
                   stopColor={COLORS.inspecoes}
@@ -273,6 +501,7 @@ const Charts = ({ reports }) => {
                   stopColor={COLORS.inspecoes}
                   stopOpacity={0}
                 />
+
               </linearGradient>
 
             </defs>
@@ -285,24 +514,24 @@ const Charts = ({ reports }) => {
 
             <XAxis
               dataKey="data"
+              axisLine={false}
+              tickLine={false}
               tick={{
                 fill: COLORS.textSecondary,
                 fontSize: 13,
               }}
-              axisLine={false}
-              tickLine={false}
             />
 
             <YAxis
+              axisLine={false}
+              tickLine={false}
               tick={{
                 fill: COLORS.textSecondary,
                 fontSize: 13,
               }}
-              axisLine={false}
-              tickLine={false}
             />
 
-            <Tooltip contentStyle={TooltipStyle} />
+            <Tooltip contentStyle={tooltipStyle} />
 
             <Area
               type="natural"
@@ -345,7 +574,7 @@ const Charts = ({ reports }) => {
 
         </ResponsiveContainer>
 
-        <div className="flex gap-6 mt-5">
+        <div className="flex gap-6 mt-6 flex-wrap">
 
           <LegendItem
             color={COLORS.inspecoes}
@@ -366,17 +595,24 @@ const Charts = ({ reports }) => {
 
       </GlassCard>
 
-      {/* ================= GRID ================= */}
+      {/* ===================================== */}
+      {/* GRID */}
+      {/* ===================================== */}
 
       <div className="grid grid-cols-12 gap-7">
 
-        {/* ================= PERFORMANCE ================= */}
+        {/* ===================================== */}
+        {/* PERFORMANCE */}
+        {/* ===================================== */}
 
         <GlassCard className="col-span-12 xl:col-span-7">
 
-          <SectionTitle title="Performance por TST" />
+          <SectionTitle
+            title="Performance por TST"
+            subtitle="Comparativo operacional entre inspeções e desvios"
+          />
 
-          <ResponsiveContainer width="100%" height={340}>
+          <ResponsiveContainer width="100%" height={360}>
 
             <BarChart
               data={tstChartData}
@@ -387,7 +623,7 @@ const Charts = ({ reports }) => {
                 left: 10,
                 bottom: 10,
               }}
-              barCategoryGap={22}
+              barCategoryGap={24}
             >
 
               <CartesianGrid
@@ -410,26 +646,26 @@ const Charts = ({ reports }) => {
                 dataKey="name"
                 axisLine={false}
                 tickLine={false}
+                width={90}
                 tick={{
                   fill: COLORS.textPrimary,
                   fontSize: 14,
                   fontWeight: 500,
                 }}
-                width={90}
               />
 
-              <Tooltip contentStyle={TooltipStyle} />
+              <Tooltip contentStyle={tooltipStyle} />
 
               <Bar
                 dataKey="inspecoes"
                 fill={COLORS.inspecoes}
-                radius={[0, 12, 12, 0]}
+                radius={[0, 14, 14, 0]}
               />
 
               <Bar
                 dataKey="desvios"
                 fill={COLORS.desvios}
-                radius={[0, 12, 12, 0]}
+                radius={[0, 14, 14, 0]}
               />
 
             </BarChart>
@@ -438,11 +674,16 @@ const Charts = ({ reports }) => {
 
         </GlassCard>
 
-        {/* ================= CLASSIFICAÇÃO ================= */}
+        {/* ===================================== */}
+        {/* CLASSIFICAÇÃO */}
+        {/* ===================================== */}
 
         <GlassCard className="col-span-12 xl:col-span-5">
 
-          <SectionTitle title="Classificação dos Desvios" />
+          <SectionTitle
+            title="Classificação dos Desvios"
+            subtitle="Distribuição por severidade"
+          />
 
           <div className="flex flex-col items-center justify-center">
 
@@ -455,19 +696,21 @@ const Charts = ({ reports }) => {
                   startAngle={180}
                   endAngle={0}
                   cx="50%"
-                  cy="80%"
-                  innerRadius={90}
-                  outerRadius={115}
+                  cy="82%"
+                  innerRadius={95}
+                  outerRadius={118}
                   paddingAngle={4}
+                  cornerRadius={10}
                   dataKey="value"
-                  cornerRadius={8}
                 >
 
                   {classificacaoData.map((entry, index) => (
+
                     <Cell
                       key={index}
                       fill={entry.color}
                     />
+
                   ))}
 
                 </Pie>
@@ -478,12 +721,12 @@ const Charts = ({ reports }) => {
 
             <div className="-mt-24 text-center">
 
-              <h2 className="text-5xl font-bold tracking-[-0.04em] text-slate-900">
+              <h2 className="text-5xl font-bold tracking-[-0.05em] text-slate-900">
                 {totalDesvios}
               </h2>
 
               <p className="text-slate-500 mt-2">
-                desvios registrados
+                desvios totais
               </p>
 
             </div>
@@ -506,19 +749,26 @@ const Charts = ({ reports }) => {
 
         </GlassCard>
 
-        {/* ================= CONDIÇÃO ================= */}
+        {/* ===================================== */}
+        {/* CONDIÇÃO */}
+        {/* ===================================== */}
 
-        <GlassCard className="col-span-12 xl:col-span-7">
+        <GlassCard className="col-span-12 xl:col-span-6">
 
-          <SectionTitle title="Condição Geral da Área" />
+          <SectionTitle
+            title="Condição Geral da Área"
+            subtitle="Distribuição das condições operacionais"
+          />
 
-          <div className="space-y-7 mt-10">
+          <div className="space-y-8 mt-10">
 
             {conditionBars.map(item => {
 
               const percent =
                 totalCondicoes > 0
-                  ? ((item.value / totalCondicoes) * 100).toFixed(0)
+                  ? (
+                      (item.value / totalCondicoes) * 100
+                    ).toFixed(0)
                   : 0;
 
               return (
@@ -574,50 +824,103 @@ const Charts = ({ reports }) => {
 
         </GlassCard>
 
-        {/* ================= TAXA ================= */}
+        {/* ===================================== */}
+        {/* TOP DESVIOS */}
+        {/* ===================================== */}
 
-        <GlassCard className="col-span-12 xl:col-span-5">
+        <GlassCard className="col-span-12 xl:col-span-6">
 
-          <SectionTitle title="Taxa de Desvios (%)" />
+          <SectionTitle
+            title="Top Desvios Encontrados"
+            subtitle="Principais ocorrências registradas nas inspeções"
+          />
 
-          <div className="space-y-6 mt-10">
+          <div className="space-y-5 mt-10">
 
-            {tstChartData.map(item => (
+            {topDesvios.length > 0 ? (
 
-              <div key={item.name}>
+              topDesvios.map((item, index) => (
 
-                <div className="flex justify-between mb-2">
+                <motion.div
+                  key={item.name}
+                  initial={{
+                    opacity: 0,
+                    x: -20,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    x: 0,
+                  }}
+                  transition={{
+                    delay: index * 0.08,
+                  }}
+                  className="
+                    flex
+                    items-center
+                    justify-between
+                    p-5
+                    rounded-2xl
+                    bg-slate-50/80
+                    border
+                    border-slate-100
+                  "
+                >
 
-                  <span className="text-slate-700 font-medium">
-                    {item.name}
-                  </span>
+                  <div className="flex items-center gap-4">
 
-                  <span className="text-slate-500 font-semibold">
-                    {item.taxa}%
-                  </span>
+                    <div
+                      className="
+                        w-10
+                        h-10
+                        rounded-xl
+                        bg-red-50
+                        flex
+                        items-center
+                        justify-center
+                        text-red-600
+                        font-semibold
+                      "
+                    >
+                      {index + 1}
+                    </div>
 
-                </div>
+                    <div>
 
-                <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden">
+                      <h4 className="font-semibold text-slate-800">
+                        {item.name}
+                      </h4>
 
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${item.taxa}%` }}
-                    transition={{
-                      duration: 1.2,
-                      ease: [0.16, 1, 0.3, 1],
-                    }}
-                    className="h-full rounded-full"
-                    style={{
-                      background: COLORS.desvios,
-                    }}
-                  />
+                      <p className="text-sm text-slate-500">
+                        ocorrência registrada
+                      </p>
 
-                </div>
+                    </div>
 
+                  </div>
+
+                  <div className="text-right">
+
+                    <h3 className="text-2xl font-bold text-slate-900">
+                      {item.value}
+                    </h3>
+
+                    <span className="text-sm text-slate-500">
+                      registros
+                    </span>
+
+                  </div>
+
+                </motion.div>
+
+              ))
+
+            ) : (
+
+              <div className="h-[300px] flex items-center justify-center text-slate-400">
+                Nenhum desvio identificado
               </div>
 
-            ))}
+            )}
 
           </div>
 
