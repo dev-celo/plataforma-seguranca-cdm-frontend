@@ -1,13 +1,26 @@
 import React from 'react';
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, RadialBarChart, RadialBar, PolarAngleAxis,
-  PieChart, Pie, Cell, ComposedChart, Bar, LabelList,
-  // Para o Gauge, faremos manual com Pie
+  ComposedChart,
+  Line,
+  Bar,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  RadialBarChart,
+  RadialBar,
+  PolarAngleAxis,
+  PieChart,
+  Pie,
+  Cell,
+  Sector,
 } from 'recharts';
 import { motion } from 'framer-motion';
 
-// Paleta de cores corporativa CDM + Cores de Segurança
+// Paleta de cores corporativa CDM
 const COLORS = {
   cdm: '#6e0000',
   cdmLight: '#8a1a1a',
@@ -20,48 +33,54 @@ const COLORS = {
   desvios: '#EF4444',
   inspecoes: '#3B82F6',
   orientacoes: '#10B981',
-  gradient: {
-    desvios: ['#EF4444', '#DC2626'],
-    inspecoes: ['#3B82F6', '#2563EB'],
-    orientacoes: ['#10B981', '#059669'],
-  }
+  orange: '#F97316',
 };
 
 // Componente de Gauge Chart manual
-const GaugeChart = ({ value, label, max = 100, thresholds = [70, 90] }) => {
-  const percent = (value / max) * 100;
+const GaugeChart = ({ value, label, max = 100 }) => {
+  const percent = Math.min(100, (value / max) * 100);
   let color = COLORS.greenSafe;
-  if (percent >= thresholds[1]) color = COLORS.redCritical;
-  else if (percent >= thresholds[0]) color = COLORS.yellowAttention;
+  if (percent >= 90) color = COLORS.redCritical;
+  else if (percent >= 70) color = COLORS.yellowAttention;
 
-  const angle = Math.min(180, (percent / 100) * 180);
-  const dashArray = 200; // Tamanho total do traço (aproximado)
-  const dashOffset = dashArray - (angle / 180) * dashArray;
+  const angle = (percent / 100) * 180;
+  const radius = 70;
+  const circumference = Math.PI * radius;
+  const strokeDasharray = circumference;
+  const strokeDashoffset = circumference - (angle / 180) * circumference;
 
   return (
     <div className="flex flex-col items-center">
-      <svg width="180" height="110" viewBox="0 0 200 120" className="mx-auto">
-        <path
-          d="M30,100 A70,70 0 0,1 170,100"
+      <svg width="180" height="110" viewBox="0 0 180 110" className="mx-auto">
+        <circle
+          cx="90"
+          cy="90"
+          r={radius}
           fill="none"
           stroke="#E5E7EB"
-          strokeWidth="15"
+          strokeWidth="12"
           strokeLinecap="round"
+          transform="rotate(180 90 90)"
+          strokeDasharray={strokeDasharray}
+          strokeDashoffset={0}
         />
-        <path
-          d="M30,100 A70,70 0 0,1 170,100"
+        <circle
+          cx="90"
+          cy="90"
+          r={radius}
           fill="none"
           stroke={color}
-          strokeWidth="15"
+          strokeWidth="12"
           strokeLinecap="round"
-          strokeDasharray={dashArray}
-          strokeDashoffset={dashOffset}
+          transform="rotate(180 90 90)"
+          strokeDasharray={strokeDasharray}
+          strokeDashoffset={strokeDashoffset}
           className="transition-all duration-1000 ease-out"
         />
-        <text x="100" y="85" textAnchor="middle" className="text-4xl font-bold dark:fill-white fill-gray-800">
-          {value}
+        <text x="90" y="85" textAnchor="middle" className="text-3xl font-bold dark:fill-white fill-gray-800">
+          {Math.round(value)}
         </text>
-        <text x="100" y="105" textAnchor="middle" className="text-xs fill-gray-500">
+        <text x="90" y="105" textAnchor="middle" className="text-xs fill-gray-500">
           {label}
         </text>
       </svg>
@@ -70,7 +89,7 @@ const GaugeChart = ({ value, label, max = 100, thresholds = [70, 90] }) => {
 };
 
 const Charts = ({ reports }) => {
-  // ==================== 1. Evolução dos Indicadores (Area Chart Suave) ====================
+  // ==================== 1. EVOLUÇÃO DOS INDICADORES (Barras + Linhas) ====================
   const evolutionData = reports
     .sort((a, b) => new Date(a.data) - new Date(b.data))
     .map(report => ({
@@ -78,161 +97,249 @@ const Charts = ({ reports }) => {
       desvios: report.indicadores?.quantidadeDesvios || 0,
       inspecoes: report.indicadores?.quantidadeInspecoes || 0,
       orientacoes: report.indicadores?.quantidadeOrientacoes || 0,
+      desviosAcumulado: 0,
     }));
 
-  // ==================== 2. Performance por TST (Radial Bar Chart) ====================
+  // Calcular acumulado de desvios (opcional)
+  let acumulado = 0;
+  evolutionData.forEach(item => {
+    acumulado += item.desvios;
+    item.desviosAcumulado = acumulado;
+  });
+
+  // ==================== 2. PERFORMANCE POR TST (RADIAL BAR CHART) ====================
   const tstRadialData = [];
+  const tstMap = new Map();
+
   reports.forEach(report => {
     const tst = report.tstResponsavel || 'Não informado';
     const total = (report.indicadores?.quantidadeInspecoes || 0) + (report.indicadores?.quantidadeDesvios || 0);
     const desvios = report.indicadores?.quantidadeDesvios || 0;
     const efficiency = total > 0 ? ((total - desvios) / total) * 100 : 100;
 
-    const existing = tstRadialData.find(d => d.name === tst);
-    if (existing) {
-      existing.efficiency = (existing.efficiency + efficiency) / 2;
-      existing.count += 1;
-    } else {
-      tstRadialData.push({ name: tst, efficiency, uv: efficiency, fill: COLORS.blueInfo, count: 1 });
+    if (!tstMap.has(tst)) {
+      tstMap.set(tst, { sumEfficiency: 0, count: 0 });
     }
+    const current = tstMap.get(tst);
+    current.sumEfficiency += efficiency;
+    current.count += 1;
   });
-  // Ajustar média final
-  tstRadialData.forEach(d => { d.efficiency = parseFloat(d.efficiency.toFixed(1)); });
 
-  // ==================== 3. Classificação dos Desvios (Donut Chart) ====================
-  const desviosPieData = [];
+  tstMap.forEach((value, key) => {
+    tstRadialData.push({
+      name: key,
+      efficiency: parseFloat((value.sumEfficiency / value.count).toFixed(1)),
+      fill: COLORS.blueInfo,
+    });
+  });
+
+  // ==================== 3. CLASSIFICAÇÃO DOS DESVIOS (DONUT CHART) ====================
+  const desviosPieData = [
+    { name: 'Leves', value: 0, color: COLORS.yellowAttention },
+    { name: 'Moderados', value: 0, color: COLORS.orange },
+    { name: 'Graves', value: 0, color: COLORS.redCritical },
+  ];
+
   reports.forEach(report => {
     if (report.classificacaoDesvios) {
-      if (desviosPieData.length === 0) {
-        desviosPieData.push({ name: 'Leves', value: report.classificacaoDesvios.desvioLeve || 0, color: COLORS.yellowAttention });
-        desviosPieData.push({ name: 'Moderados', value: report.classificacaoDesvios.desvioModerado || 0, color: COLORS.orange });
-        desviosPieData.push({ name: 'Graves', value: report.classificacaoDesvios.desvioGrave || 0, color: COLORS.redCritical });
-      } else {
-        desviosPieData[0].value += report.classificacaoDesvios.desvioLeve || 0;
-        desviosPieData[1].value += report.classificacaoDesvios.desvioModerado || 0;
-        desviosPieData[2].value += report.classificacaoDesvios.desvioGrave || 0;
-      }
+      desviosPieData[0].value += report.classificacaoDesvios.desvioLeve || 0;
+      desviosPieData[1].value += report.classificacaoDesvios.desvioModerado || 0;
+      desviosPieData[2].value += report.classificacaoDesvios.desvioGrave || 0;
     }
   });
+
   const totalDesvios = desviosPieData.reduce((acc, curr) => acc + curr.value, 0);
 
-  // ==================== 4. Condição da Área (Gauge Chart) ====================
+  // ==================== 4. CONDIÇÃO DA ÁREA (GAUGE CHART) ====================
   const seguraCount = reports.filter(r => r.condicaoGeralArea === 'Segura').length;
   const atencaoCount = reports.filter(r => r.condicaoGeralArea === 'Atenção').length;
   const criticaCount = reports.filter(r => r.condicaoGeralArea === 'Crítica').length;
   const totalAreas = seguraCount + atencaoCount + criticaCount;
-  const getConditionScore = () => {
-    if (totalAreas === 0) return 100;
-    return (seguraCount / totalAreas) * 100;
-  };
-  const conditionScore = getConditionScore();
+  const conditionScore = totalAreas > 0 ? (seguraCount / totalAreas) * 100 : 100;
 
-  // ==================== 5. Taxa de Desvios por TST (Stacked Bar) ====================
+  // ==================== 5. TAXA DE DESVIOS POR TST (STACKED BAR) ====================
   const tstStackedData = [];
+  const stackedMap = new Map();
+
   reports.forEach(report => {
     const tst = report.tstResponsavel || 'Não informado';
     const inspecoes = report.indicadores?.quantidadeInspecoes || 0;
     const desvios = report.indicadores?.quantidadeDesvios || 0;
     const conformidade = inspecoes - desvios;
-    const existing = tstStackedData.find(d => d.name === tst);
-    if (existing) {
-      existing.inspecoes += inspecoes;
-      existing.conformidade += conformidade;
-      existing.desvios += desvios;
-    } else {
-      tstStackedData.push({ name: tst, inspecoes, conformidade, desvios });
+
+    if (!stackedMap.has(tst)) {
+      stackedMap.set(tst, { conformidade: 0, desvios: 0, total: 0 });
     }
+    const current = stackedMap.get(tst);
+    current.conformidade += conformidade;
+    current.desvios += desvios;
+    current.total += inspecoes;
   });
-  // Calcular % para exibição
-  tstStackedData.forEach(d => {
-    const total = d.inspecoes + d.conformidade + d.desvios;
-    if (total > 0) {
-      d.inspecoesPercent = (d.inspecoes / total) * 100;
-      d.conformidadePercent = (d.conformidade / total) * 100;
-      d.desviosPercent = (d.desvios / total) * 100;
+
+  stackedMap.forEach((value, key) => {
+    let conformidadePercent = 0;
+    let desviosPercent = 0;
+    if (value.total > 0) {
+      conformidadePercent = (value.conformidade / value.total) * 100;
+      desviosPercent = (value.desvios / value.total) * 100;
     } else {
-      d.inspecoesPercent = 33.33;
-      d.conformidadePercent = 33.33;
-      d.desviosPercent = 33.33;
+      conformidadePercent = 100;
+      desviosPercent = 0;
     }
+    tstStackedData.push({
+      name: key,
+      conformidadePercent: parseFloat(conformidadePercent.toFixed(1)),
+      desviosPercent: parseFloat(desviosPercent.toFixed(1)),
+    });
   });
 
   return (
     <div className="space-y-6">
       {/* ==================== 1. EVOLUÇÃO DOS INDICADORES ==================== */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-card rounded-2xl p-6"
+      >
         <h3 className="text-xl font-semibold mb-6 text-cdm-600 dark:text-cdm-400 flex items-center gap-2">
           <span className="w-1 h-6 bg-cdm-500 rounded-full"></span>
           Evolução dos Indicadores
         </h3>
-        <ResponsiveContainer width="100%" height={380}>
-          <AreaChart data={evolutionData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+        <ResponsiveContainer width="100%" height={400}>
+          <ComposedChart data={evolutionData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
             <defs>
-              <linearGradient id="colorDesvios" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={COLORS.desvios} stopOpacity={0.8}/>
-                <stop offset="95%" stopColor={COLORS.desvios} stopOpacity={0.1}/>
-              </linearGradient>
-              <linearGradient id="colorInspecoes" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={COLORS.inspecoes} stopOpacity={0.8}/>
-                <stop offset="95%" stopColor={COLORS.inspecoes} stopOpacity={0.1}/>
-              </linearGradient>
-              <linearGradient id="colorOrientacoes" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={COLORS.orientacoes} stopOpacity={0.8}/>
-                <stop offset="95%" stopColor={COLORS.orientacoes} stopOpacity={0.1}/>
+              <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={COLORS.desvios} stopOpacity={0.8} />
+                <stop offset="100%" stopColor={COLORS.desvios} stopOpacity={0.3} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.1} horizontal vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.1} />
             <XAxis dataKey="date" stroke="#6B7280" tick={{ fontSize: 12 }} />
-            <YAxis stroke="#6B7280" tick={{ fontSize: 12 }} />
-            <Tooltip contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '8px', border: 'none', color: '#fff' }} />
-            <Legend />
-            <Area type="monotone" dataKey="desvios" stroke={COLORS.desvios} fill="url(#colorDesvios)" strokeWidth={3} name="Desvios" />
-            <Area type="monotone" dataKey="inspecoes" stroke={COLORS.inspecoes} fill="url(#colorInspecoes)" strokeWidth={3} name="Inspeções" />
-            <Area type="monotone" dataKey="orientacoes" stroke={COLORS.orientacoes} fill="url(#colorOrientacoes)" strokeWidth={3} name="Orientações" />
-          </AreaChart>
+            <YAxis yAxisId="left" stroke="#6B7280" tick={{ fontSize: 12 }} />
+            <YAxis yAxisId="right" orientation="right" stroke="#EF4444" tick={{ fontSize: 12 }} />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'rgba(0,0,0,0.85)',
+                borderRadius: '12px',
+                border: 'none',
+                color: '#fff',
+              }}
+              formatter={(value, name) => {
+                if (name === 'Desvios') return [`${value} desvios`, name];
+                if (name === 'Inspeções') return [`${value} inspeções`, name];
+                return [`${value}`, name];
+              }}
+            />
+            <Legend wrapperStyle={{ paddingTop: '16px' }} />
+            <Bar
+              yAxisId="left"
+              dataKey="inspecoes"
+              fill={COLORS.blueInfo}
+              name="Inspeções"
+              radius={[8, 8, 0, 0]}
+              barSize={40}
+            />
+            <Line
+              yAxisId="right"
+              type="monotone"
+              dataKey="desvios"
+              stroke={COLORS.desvios}
+              strokeWidth={3}
+              name="Desvios"
+              dot={{ fill: COLORS.desvios, r: 6, strokeWidth: 2 }}
+              activeDot={{ r: 8 }}
+            />
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="orientacoes"
+              stroke={COLORS.orientacoes}
+              strokeWidth={3}
+              name="Orientações"
+              dot={{ fill: COLORS.orientacoes, r: 6, strokeWidth: 2 }}
+              activeDot={{ r: 8 }}
+            />
+          </ComposedChart>
         </ResponsiveContainer>
+        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
+          Barras representam Inspeções | Linhas representam Desvios e Orientações
+        </p>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* ==================== 2. PERFORMANCE POR TST (RADIAL) ==================== */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-2xl p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="glass-card rounded-2xl p-6"
+        >
           <h3 className="text-lg font-semibold mb-4 text-cdm-600 dark:text-cdm-400 flex items-center gap-2">
             <span className="w-1 h-4 bg-cdm-500 rounded-full"></span>
-            Performance por TST (Eficiência)
+            Performance por TST
           </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <RadialBarChart cx="50%" cy="50%" innerRadius="20%" outerRadius="90%" barSize={15} data={tstRadialData}>
-              <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
+          <ResponsiveContainer width="100%" height={320}>
+            <RadialBarChart
+              cx="50%"
+              cy="50%"
+              innerRadius="20%"
+              outerRadius="90%"
+              barSize={16}
+              data={tstRadialData}
+              startAngle={180}
+              endAngle={0}
+            >
+              <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
               <RadialBar
                 minAngle={15}
-                label={{ position: 'insideStart', fill: '#fff', formatter: (value, name) => `${value}%` }}
+                label={{
+                  position: 'insideStart',
+                  fill: '#fff',
+                  fontSize: 12,
+                  fontWeight: 'bold',
+                  formatter: (value, name) => `${value}%`,
+                }}
                 background
                 clockWise
                 dataKey="efficiency"
+                cornerRadius={8}
               />
-              <Legend iconSize={10} layout="vertical" verticalAlign="middle" align="right" />
-              <Tooltip formatter={(value) => `${value}%`} contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', border: 'none', borderRadius: '8px' }} />
+              <Legend
+                iconSize={10}
+                layout="vertical"
+                verticalAlign="middle"
+                align="right"
+                formatter={(value, entry) => `${value}: ${entry.payload.efficiency}%`}
+              />
+              <Tooltip formatter={(value) => `${value}% de eficiência`} />
             </RadialBarChart>
           </ResponsiveContainer>
-          <p className="text-center text-sm text-gray-500 mt-2">Eficiência = (Inspeções - Desvios) / Total</p>
+          <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
+            Eficiência = (Inspeções - Desvios) / Total de Inspeções
+          </p>
         </motion.div>
 
-        {/* ==================== 3. CLASSIFICAÇÃO DOS DESVIOS (DONUT) ==================== */}
+        {/* ==================== 3. CLASSIFICAÇÃO DOS DESVIOS ==================== */}
         {totalDesvios > 0 && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card rounded-2xl p-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="glass-card rounded-2xl p-6"
+          >
             <h3 className="text-lg font-semibold mb-4 text-cdm-600 dark:text-cdm-400 flex items-center gap-2">
               <span className="w-1 h-4 bg-cdm-500 rounded-full"></span>
               Classificação dos Desvios
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={320}>
               <PieChart>
                 <Pie
                   data={desviosPieData}
                   cx="50%"
                   cy="50%"
-                  innerRadius="60%"
+                  innerRadius="55%"
                   outerRadius="80%"
-                  paddingAngle={2}
+                  paddingAngle={3}
                   dataKey="value"
                   label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                   labelLine={{ stroke: '#888', strokeWidth: 1 }}
@@ -241,49 +348,76 @@ const Charts = ({ reports }) => {
                     <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => `${value} desvio(s)`} contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '8px', border: 'none' }} />
+                <Tooltip formatter={(value) => `${value} desvio(s)`} />
               </PieChart>
             </ResponsiveContainer>
+            <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
+              Total de {totalDesvios} desvios identificados
+            </p>
           </motion.div>
         )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* ==================== 4. CONDIÇÃO GERAL DA ÁREA (GAUGE) ==================== */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card rounded-2xl p-6">
+        {/* ==================== 4. CONDIÇÃO GERAL DA ÁREA ==================== */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="glass-card rounded-2xl p-6"
+        >
           <h3 className="text-lg font-semibold mb-4 text-cdm-600 dark:text-cdm-400 flex items-center gap-2">
             <span className="w-1 h-4 bg-cdm-500 rounded-full"></span>
-            Condição Geral da Área (Índice de Segurança)
+            Condição Geral da Área
           </h3>
-          <GaugeChart value={Math.round(conditionScore)} label="Segurança" max={100} thresholds={[70, 90]} />
-          <div className="flex justify-around mt-4 text-sm">
-            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-green-500"></div> Segura ({seguraCount})</div>
-            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-yellow-500"></div> Atenção ({atencaoCount})</div>
-            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-red-500"></div> Crítica ({criticaCount})</div>
+          <GaugeChart value={conditionScore} label="Índice de Segurança" max={100} />
+          <div className="flex justify-around mt-6 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              <span>Segura ({seguraCount})</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+              <span>Atenção ({atencaoCount})</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-red-500"></div>
+              <span>Crítica ({criticaCount})</span>
+            </div>
           </div>
         </motion.div>
 
-        {/* ==================== 5. TAXA DE DESVIOS POR TST (STACKED BAR) ==================== */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass-card rounded-2xl p-6">
+        {/* ==================== 5. TAXA DE DESVIOS POR TST ==================== */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="glass-card rounded-2xl p-6"
+        >
           <h3 className="text-lg font-semibold mb-4 text-cdm-600 dark:text-cdm-400 flex items-center gap-2">
             <span className="w-1 h-4 bg-cdm-500 rounded-full"></span>
-            Taxa de Desvios por TST (%)
+            Taxa de Desvios por TST
           </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <ComposedChart layout="vertical" data={tstStackedData} margin={{ top: 20, right: 20, bottom: 20, left: 80 }}>
+          <ResponsiveContainer width="100%" height={320}>
+            <ComposedChart layout="vertical" data={tstStackedData} margin={{ top: 20, right: 20, bottom: 20, left: 60 }}>
               <CartesianGrid stroke="#374151" opacity={0.1} horizontal={false} />
               <XAxis type="number" domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-              <YAxis type="category" dataKey="name" scale="band" />
-              <Tooltip formatter={(value, name) => {
-                if (name === 'Inspeções') return `${value}% inspeções conformes`;
-                if (name === 'Desvios') return `${value}% desvios`;
-                return `${value}%`;
-              }} contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '8px', border: 'none' }} />
-              <Legend />
-              <Bar dataKey="conformidadePercent" stackId="a" fill={COLORS.greenSafe} name="Conformidade (%)" />
-              <Bar dataKey="desviosPercent" stackId="a" fill={COLORS.redCritical} name="Desvios (%)" />
+              <YAxis type="category" dataKey="name" scale="band" width={80} />
+              <Tooltip
+                formatter={(value, name) => {
+                  if (name === 'Conformidade') return [`${value}%`, 'Conformidade'];
+                  return [`${value}%`, 'Desvios'];
+                }}
+                contentStyle={{ backgroundColor: 'rgba(0,0,0,0.85)', borderRadius: '12px', border: 'none' }}
+              />
+              <Legend wrapperStyle={{ paddingTop: '16px' }} />
+              <Bar dataKey="conformidadePercent" stackId="a" fill={COLORS.greenSafe} name="Conformidade" radius={[0, 8, 8, 0]} />
+              <Bar dataKey="desviosPercent" stackId="a" fill={COLORS.redCritical} name="Desvios" radius={[8, 0, 0, 8]} />
             </ComposedChart>
           </ResponsiveContainer>
+          <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
+            Proporção de Conformidade vs Desvios por TST
+          </p>
         </motion.div>
       </div>
     </div>
