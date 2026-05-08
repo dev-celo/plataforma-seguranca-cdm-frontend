@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
-import { useTheme } from "../../contexts/ThemeContext";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Menu,
   X,
@@ -15,8 +15,8 @@ import {
   Sun,
   Moon,
   HardHat,
-  Building2,
-} from "lucide-react";
+  Building2
+} from 'lucide-react';
 
 const Navbar = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
@@ -25,25 +25,20 @@ const Navbar = ({ onMenuClick }) => {
   const navigate = useNavigate();
 
   const disabledLinks = [
-    { name: "FAQ", icon: HelpCircle, href: "#", disabled: true },
-    {
-      name: "Dúvidas Segurança",
-      icon: AlertTriangle,
-      href: "#",
-      disabled: true,
-    },
-    { name: "Contato Suporte", icon: MessageCircle, href: "#", disabled: true },
+    { name: 'FAQ', icon: HelpCircle, href: '#', disabled: true },
+    { name: 'Dúvidas Segurança', icon: AlertTriangle, href: '#', disabled: true },
+    { name: 'Contato Suporte', icon: MessageCircle, href: '#', disabled: true },
   ];
 
   const handleLogout = async () => {
     await logout();
-    navigate("/login");
+    navigate('/login');
   };
 
   return (
     <nav className="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-cdm-200 dark:border-cdm-800">
       <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-16 md:h-20">
           {/* Menu Button (Mobile) */}
           <button
             onClick={onMenuClick}
@@ -52,14 +47,11 @@ const Navbar = ({ onMenuClick }) => {
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Logo CDM com imagem */}
-          <Link
-            to="/dashboard"
-            className="flex flex-col items-center group ml-2 md:ml-0"
-          >
-            <img
-              src="/logo.png"
-              alt="CDM Construtora"
+          {/* Logo CDM em Destaque */}
+          <Link to="/dashboard" className="flex flex-col items-center group ml-2 md:ml-0">
+            <img 
+              src="/logo.png" 
+              alt="CDM Construtora" 
               className="w-10 h-10 md:w-14 md:h-14 object-contain rounded-xl group-hover:scale-105 transition-transform duration-300 shadow-md"
             />
             <span className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
@@ -92,11 +84,7 @@ const Navbar = ({ onMenuClick }) => {
               onClick={() => setDarkMode(!darkMode)}
               className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
             >
-              {darkMode ? (
-                <Sun className="w-4 h-4" />
-              ) : (
-                <Moon className="w-4 h-4" />
-              )}
+              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
 
             {/* User Dropdown */}
@@ -109,7 +97,7 @@ const Navbar = ({ onMenuClick }) => {
                   <User className="w-4 h-4 text-white" />
                 </div>
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {user?.email?.split("@")[0] || "Usuário"}
+                  {user?.email?.split('@')[0] || 'Usuário'}
                 </span>
                 <ChevronDown className="w-4 h-4 text-gray-500" />
               </button>
@@ -141,13 +129,9 @@ const Navbar = ({ onMenuClick }) => {
               onClick={() => setDarkMode(!darkMode)}
               className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
             >
-              {darkMode ? (
-                <Sun className="w-4 h-4" />
-              ) : (
-                <Moon className="w-4 h-4" />
-              )}
+              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
-
+            
             <div className="relative">
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
