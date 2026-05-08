@@ -131,6 +131,9 @@ const ComparativeAnalysis = ({ reports }) => {
     return 'text-gray-500';
   };
 
+  // 🔥 LISTA DINÂMICA DE TSTS (busca automaticamente do banco)
+  const uniqueTSTs = [...new Set(reports.map(r => r.tstResponsavel).filter(Boolean))];
+
   return (
     <div className="space-y-6 md:space-y-7">
       {/* Análise Comparativa */}
@@ -240,68 +243,74 @@ const ComparativeAnalysis = ({ reports }) => {
         )}
       </GlassCard>
 
-      {/* Performance por TST - Comparativa */}
+      {/* Performance por TST - Comparativa DINÂMICA */}
       <GlassCard>
         <SectionTitle 
           title="Performance por TST" 
           subtitle="Comparativo de eficiência entre os TSTs"
         />
         
-        {['Sued Brandão', 'Flavia Cardoso'].map(tst => {
-          const tstReports = reports.filter(r => r.tstResponsavel === tst);
-          const tstLastWeek = tstReports.filter(r => {
-            const date = parseISO(r.data);
-            return isWithinInterval(date, { start: lastWeekStart, end: lastWeekEnd });
-          });
-          const tstLast15Days = tstReports.filter(r => {
-            const date = parseISO(r.data);
-            return date >= last15DaysStart;
-          });
-          
-          const weekInspecoes = tstLastWeek.reduce((sum, r) => sum + (r.indicadores?.quantidadeInspecoes || 0), 0);
-          const weekDesvios = tstLastWeek.reduce((sum, r) => sum + (r.indicadores?.quantidadeDesvios || 0), 0);
-          const fifteenInspecoes = tstLast15Days.reduce((sum, r) => sum + (r.indicadores?.quantidadeInspecoes || 0), 0);
-          const fifteenDesvios = tstLast15Days.reduce((sum, r) => sum + (r.indicadores?.quantidadeDesvios || 0), 0);
-          
-          const weekTaxa = weekInspecoes > 0 ? (weekDesvios / weekInspecoes) * 100 : 0;
-          const fifteenTaxa = fifteenInspecoes > 0 ? (fifteenDesvios / fifteenInspecoes) * 100 : 0;
-          const taxaVariation = weekTaxa > 0 ? (((fifteenTaxa - weekTaxa) / weekTaxa) * 100) : 0;
-          
-          return (
-            <div key={tst} className="mb-4 last:mb-0 p-4 md:p-5 bg-slate-50/80 dark:bg-gray-800/50 rounded-2xl">
-              <div className="flex flex-wrap justify-between items-center gap-2 mb-3">
-                <span className="font-semibold text-base md:text-lg">{tst}</span>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs text-slate-500">Taxa de Desvios</span>
-                  <ArrowRight className="w-3 h-3 text-slate-400" />
-                  <span className="text-sm font-medium">{weekTaxa.toFixed(1)}%</span>
-                  <span className="text-slate-400">→</span>
-                  <span className="text-sm font-medium">{fifteenTaxa.toFixed(1)}%</span>
-                  {taxaVariation !== 0 && (
-                    <div className={`flex items-center gap-0.5 ${taxaVariation > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                      {taxaVariation > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                      <span className="text-xs">{Math.abs(taxaVariation).toFixed(1)}%</span>
-                    </div>
-                  )}
+        {uniqueTSTs.length > 0 ? (
+          uniqueTSTs.map(tst => {
+            const tstReports = reports.filter(r => r.tstResponsavel === tst);
+            const tstLastWeek = tstReports.filter(r => {
+              const date = parseISO(r.data);
+              return isWithinInterval(date, { start: lastWeekStart, end: lastWeekEnd });
+            });
+            const tstLast15Days = tstReports.filter(r => {
+              const date = parseISO(r.data);
+              return date >= last15DaysStart;
+            });
+            
+            const weekInspecoes = tstLastWeek.reduce((sum, r) => sum + (r.indicadores?.quantidadeInspecoes || 0), 0);
+            const weekDesvios = tstLastWeek.reduce((sum, r) => sum + (r.indicadores?.quantidadeDesvios || 0), 0);
+            const fifteenInspecoes = tstLast15Days.reduce((sum, r) => sum + (r.indicadores?.quantidadeInspecoes || 0), 0);
+            const fifteenDesvios = tstLast15Days.reduce((sum, r) => sum + (r.indicadores?.quantidadeDesvios || 0), 0);
+            
+            const weekTaxa = weekInspecoes > 0 ? (weekDesvios / weekInspecoes) * 100 : 0;
+            const fifteenTaxa = fifteenInspecoes > 0 ? (fifteenDesvios / fifteenInspecoes) * 100 : 0;
+            const taxaVariation = weekTaxa > 0 ? (((fifteenTaxa - weekTaxa) / weekTaxa) * 100) : 0;
+            
+            return (
+              <div key={tst} className="mb-4 last:mb-0 p-4 md:p-5 bg-slate-50/80 dark:bg-gray-800/50 rounded-2xl">
+                <div className="flex flex-wrap justify-between items-center gap-2 mb-3">
+                  <span className="font-semibold text-base md:text-lg">{tst}</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-slate-500">Taxa de Desvios</span>
+                    <ArrowRight className="w-3 h-3 text-slate-400" />
+                    <span className="text-sm font-medium">{weekTaxa.toFixed(1)}%</span>
+                    <span className="text-slate-400">→</span>
+                    <span className="text-sm font-medium">{fifteenTaxa.toFixed(1)}%</span>
+                    {taxaVariation !== 0 && (
+                      <div className={`flex items-center gap-0.5 ${taxaVariation > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        {taxaVariation > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                        <span className="text-xs">{Math.abs(taxaVariation).toFixed(1)}%</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 md:gap-4 text-xs md:text-sm">
+                  <div>
+                    <p className="text-slate-500 mb-1">Última Semana</p>
+                    <p>Inspeções: {weekInspecoes}</p>
+                    <p>Desvios: {weekDesvios}</p>
+                    <p>Relatórios: {tstLastWeek.length}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500 mb-1">Últimos 15 Dias</p>
+                    <p>Inspeções: {fifteenInspecoes}</p>
+                    <p>Desvios: {fifteenDesvios}</p>
+                    <p>Relatórios: {tstLast15Days.length}</p>
+                  </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3 md:gap-4 text-xs md:text-sm">
-                <div>
-                  <p className="text-slate-500 mb-1">Última Semana</p>
-                  <p>Inspeções: {weekInspecoes}</p>
-                  <p>Desvios: {weekDesvios}</p>
-                  <p>Relatórios: {tstLastWeek.length}</p>
-                </div>
-                <div>
-                  <p className="text-slate-500 mb-1">Últimos 15 Dias</p>
-                  <p>Inspeções: {fifteenInspecoes}</p>
-                  <p>Desvios: {fifteenDesvios}</p>
-                  <p>Relatórios: {tstLast15Days.length}</p>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })
+        ) : (
+          <div className="text-center py-8 text-slate-500 dark:text-gray-400">
+            Nenhum TST encontrado nos relatórios
+          </div>
+        )}
       </GlassCard>
     </div>
   );
