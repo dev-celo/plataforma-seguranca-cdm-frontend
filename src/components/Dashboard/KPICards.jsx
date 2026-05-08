@@ -67,7 +67,7 @@ const KPICards = ({ kpiData, periodLabel }) => {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
       {cards.map((card, index) => {
         const Icon = card.icon;
         const TrendIcon = card.trendIcon;
@@ -78,28 +78,34 @@ const KPICards = ({ kpiData, periodLabel }) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="glass-card rounded-2xl overflow-hidden group cursor-pointer card-hover"
+            className="glass-card rounded-xl md:rounded-2xl overflow-hidden group cursor-pointer card-hover"
           >
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className={`p-3 rounded-xl bg-gradient-to-r ${card.color} shadow-lg`}>
-                  <Icon className="w-6 h-6 text-white" />
+            <div className="p-4 md:p-6">
+              {/* Cabeçalho do Card */}
+              <div className="flex justify-between items-start mb-3 md:mb-4">
+                <div className={`p-2 md:p-3 rounded-xl bg-gradient-to-r ${card.color} shadow-lg`}>
+                  <Icon className="w-5 h-5 md:w-6 md:h-6 text-white" />
                 </div>
-                <span className="text-xs text-gray-400">{periodLabel}</span>
+                <span className="text-[10px] md:text-xs text-gray-400 truncate max-w-[80px] text-right">
+                  {periodLabel}
+                </span>
               </div>
               
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+              {/* Título */}
+              <h3 className="text-xs md:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 truncate">
                 {card.title}
               </h3>
               
-              <p className="text-3xl font-bold text-gray-800 dark:text-white mb-2">
+              {/* Valor Principal */}
+              <p className="text-xl md:text-3xl font-bold text-gray-800 dark:text-white mb-2">
                 {card.value}
               </p>
               
+              {/* Trend / Informação adicional */}
               {card.trend && (
-                <div className="flex items-center gap-1">
-                  {TrendIcon && <TrendIcon className={`w-4 h-4 ${card.trendColor || 'text-gray-500'}`} />}
-                  <span className={`text-xs font-medium ${card.trendColor || 'text-gray-500'}`}>
+                <div className="flex items-center gap-1 flex-wrap">
+                  {TrendIcon && <TrendIcon className={`w-3 h-3 md:w-4 md:h-4 ${card.trendColor || 'text-gray-500'}`} />}
+                  <span className={`text-[10px] md:text-xs font-medium ${card.trendColor || 'text-gray-500'} truncate max-w-[120px]`}>
                     {card.trend}
                   </span>
                 </div>

@@ -47,11 +47,13 @@ const Navbar = ({ onMenuClick }) => {
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Logo CDM */}
+          {/* Logo CDM com imagem */}
           <Link to="/dashboard" className="flex items-center space-x-3 group ml-2 md:ml-0">
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-cdm-500 to-cdm-700 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-              <Building2 className="w-4 h-4 md:w-5 md:h-5 text-white" />
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="CDM Construtora" 
+              className="w-8 h-8 md:w-10 md:h-10 object-contain rounded-lg group-hover:scale-105 transition-transform"
+            />
             <div className="hidden sm:block">
               <h1 className="text-lg md:text-xl font-bold text-cdm-600 dark:text-cdm-400">
                 CDM Construtora
