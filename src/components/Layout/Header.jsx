@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../contexts/ThemeContext";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Menu,
   X,
@@ -15,8 +15,8 @@ import {
   Sun,
   Moon,
   HardHat,
-  Building2
-} from 'lucide-react';
+  Building2,
+} from "lucide-react";
 
 const Navbar = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
@@ -25,14 +25,19 @@ const Navbar = ({ onMenuClick }) => {
   const navigate = useNavigate();
 
   const disabledLinks = [
-    { name: 'FAQ', icon: HelpCircle, href: '#', disabled: true },
-    { name: 'Dúvidas Segurança', icon: AlertTriangle, href: '#', disabled: true },
-    { name: 'Contato Suporte', icon: MessageCircle, href: '#', disabled: true },
+    { name: "FAQ", icon: HelpCircle, href: "#", disabled: true },
+    {
+      name: "Dúvidas Segurança",
+      icon: AlertTriangle,
+      href: "#",
+      disabled: true,
+    },
+    { name: "Contato Suporte", icon: MessageCircle, href: "#", disabled: true },
   ];
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
@@ -48,20 +53,18 @@ const Navbar = ({ onMenuClick }) => {
           </button>
 
           {/* Logo CDM com imagem */}
-          <Link to="/dashboard" className="flex items-center space-x-3 group ml-2 md:ml-0">
-            <img 
-              src="/logo.png" 
-              alt="CDM Construtora" 
-              className="w-8 h-8 md:w-10 md:h-10 object-contain rounded-lg group-hover:scale-105 transition-transform"
+          <Link
+            to="/dashboard"
+            className="flex flex-col items-center group ml-2 md:ml-0"
+          >
+            <img
+              src="/logo.png"
+              alt="CDM Construtora"
+              className="w-10 h-10 md:w-14 md:h-14 object-contain rounded-xl group-hover:scale-105 transition-transform duration-300 shadow-md"
             />
-            <div className="hidden sm:block">
-              <h1 className="text-lg md:text-xl font-bold text-cdm-600 dark:text-cdm-400">
-                CDM Construtora
-              </h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400 -mt-1 hidden md:block">
-                Gestão de Segurança do Trabalho
-              </p>
-            </div>
+            <span className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
+              Gestão de Segurança
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -89,7 +92,11 @@ const Navbar = ({ onMenuClick }) => {
               onClick={() => setDarkMode(!darkMode)}
               className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
             >
-              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {darkMode ? (
+                <Sun className="w-4 h-4" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
             </button>
 
             {/* User Dropdown */}
@@ -102,7 +109,7 @@ const Navbar = ({ onMenuClick }) => {
                   <User className="w-4 h-4 text-white" />
                 </div>
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {user?.email?.split('@')[0] || 'Usuário'}
+                  {user?.email?.split("@")[0] || "Usuário"}
                 </span>
                 <ChevronDown className="w-4 h-4 text-gray-500" />
               </button>
@@ -134,9 +141,13 @@ const Navbar = ({ onMenuClick }) => {
               onClick={() => setDarkMode(!darkMode)}
               className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
             >
-              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {darkMode ? (
+                <Sun className="w-4 h-4" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
             </button>
-            
+
             <div className="relative">
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
