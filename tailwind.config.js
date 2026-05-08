@@ -20,10 +20,18 @@ export default {
           800: '#4A0000',
           900: '#3E0000',
         },
+        // 🔥 CORES PERSONALIZADAS PARA DARK MODE
+        dark: {
+          bg: '#0F172A',
+          card: '#1E293B',
+          border: '#334155',
+          text: '#F1F5F9',
+          'text-muted': '#94A3B8',
+        },
         construction: {
-          500: '#4B5563',
-          600: '#374151',
-          700: '#1F2937',
+          500: '#6B7280',
+          600: '#4B5563',
+          700: '#374151',
         },
         safety: {
           500: '#10B981',

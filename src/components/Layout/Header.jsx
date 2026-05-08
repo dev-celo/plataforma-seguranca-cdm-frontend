@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from "react";
+
+import { Link, useNavigate } from "react-router-dom";
+
+import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../contexts/ThemeContext";
+
+import { motion, AnimatePresence } from "framer-motion";
+
 import {
   Menu,
-  X,
   LogOut,
   User,
   HelpCircle,
@@ -14,164 +17,433 @@ import {
   ChevronDown,
   Sun,
   Moon,
-  HardHat,
-  Building2
-} from 'lucide-react';
+} from "lucide-react";
 
 const Navbar = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
+
   const { darkMode, setDarkMode } = useTheme();
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
   const navigate = useNavigate();
 
+  // ============================================
+  // LINKS FUTUROS
+  // ============================================
+
   const disabledLinks = [
-    { name: 'FAQ', icon: HelpCircle, href: '#', disabled: true },
-    { name: 'Dúvidas Segurança', icon: AlertTriangle, href: '#', disabled: true },
-    { name: 'Contato Suporte', icon: MessageCircle, href: '#', disabled: true },
+    {
+      name: "FAQ",
+      icon: HelpCircle,
+    },
+
+    {
+      name: "Segurança",
+      icon: AlertTriangle,
+    },
+
+    {
+      name: "Suporte",
+      icon: MessageCircle,
+    },
   ];
+
+  // ============================================
+  // LOGOUT
+  // ============================================
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+
+    navigate("/login");
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-cdm-200 dark:border-cdm-800">
-      <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16 md:h-20">
-          {/* Menu Button (Mobile) */}
-          <button
-            onClick={onMenuClick}
-            className="md:hidden p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+    <nav
+      className="
+        sticky
+        top-0
+        z-50
+        bg-white/82
+        backdrop-blur-2xl
+        border-b
+        border-slate-200/70
+        shadow-[0_4px_30px_rgba(15,23,42,0.04)]
+      "
+    >
+      <div className="px-4 sm:px-6 lg:px-10">
+        <div className="relative flex items-center justify-between h-[82px] md:h-[96px]">
+          {/* ============================================ */}
+          {/* LEFT */}
+          {/* ============================================ */}
 
-          {/* Logo CDM em SUPER DESTAQUE */}
-          <Link to="/dashboard" className="flex flex-col items-center group ml-2 md:ml-0 relative">
-            {/* Glow effect atrás da logo */}
-            <div className="absolute inset-0 bg-gradient-to-r from-cdm-500/20 to-cdm-700/20 rounded-full blur-xl group-hover:blur-2xl transition-all duration-500 -z-10 scale-110"></div>
-            
-            {/* Container com gradiente e brilho */}
-            <div className="relative">
-              {/* Anel de brilho externo */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-cdm-500 via-cdm-600 to-cdm-700 rounded-full opacity-75 group-hover:opacity-100 blur-md group-hover:blur-xl transition-all duration-500"></div>
-              
-              {/* Logo com borda gradiente */}
-              <div className="relative bg-gradient-to-r from-cdm-500 to-cdm-700 rounded-2xl p-1 shadow-2xl group-hover:shadow-cdm-500/50 transition-all duration-500">
-                <img 
-                  src="/logo.png" 
-                  alt="CDM Construtora" 
-                  className="w-12 h-12 md:w-16 md:h-16 object-contain rounded-xl bg-white dark:bg-gray-900 transition-all duration-300 group-hover:scale-105"
+          <div className="flex items-center gap-4">
+            {/* MOBILE MENU */}
+            <button
+              onClick={onMenuClick}
+              className="
+                md:hidden
+                p-2.5
+                rounded-xl
+                bg-slate-100
+                hover:bg-slate-200
+                transition-all
+              "
+            >
+              <Menu className="w-5 h-5 text-slate-700" />
+            </button>
+
+            {/* ============================================ */}
+            {/* BRAND */}
+            {/* ============================================ */}
+
+            <div
+              className="
+                absolute
+                left-1/2
+                -translate-x-1/2
+                md:static
+                md:translate-x-0
+                flex
+                items-center
+                justify-center
+              "
+            >
+              <Link
+                to="/dashboard"
+                className="
+                  flex
+                  items-center
+                  justify-center
+                  shrink-0
+                  group
+                "
+              >
+                <img
+                  src="/logo.png"
+                  alt="CDM Construtora"
+                  className="
+                    w-[88px]
+                    md:w-[120px]
+                    h-auto
+                    object-contain
+                    transition-all
+                    duration-300
+                    group-hover:scale-[1.02]
+                    select-none
+                  "
+                  draggable={false}
                 />
-              </div>
-              
-              {/* Indicador de destaque (pulse) */}
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-lg"></div>
+              </Link>
             </div>
-            
-            {/* Texto com gradiente */}
-            <div className="mt-2 text-center">
-              <span className="text-[10px] md:text-xs font-bold bg-gradient-to-r from-cdm-500 to-cdm-700 bg-clip-text text-transparent">
-                CDM Construtora
-              </span>
-              <span className="text-[8px] md:text-[10px] text-gray-500 dark:text-gray-400 block -mt-0.5">
-                Gestão de Segurança
-              </span>
-            </div>
-          </Link>
+          </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
-            {/* Links Desabilitados */}
+          {/* ============================================ */}
+          {/* RIGHT - DESKTOP */}
+          {/* ============================================ */}
+
+          <div className="hidden md:flex items-center gap-2">
+            {/* LINKS DISABLED */}
+
             {disabledLinks.map((link) => (
               <div key={link.name} className="relative group">
                 <button
                   disabled
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-400 dark:text-gray-600 cursor-not-allowed"
+                  className="
+                    flex
+                    items-center
+                    gap-2
+                    px-4
+                    py-2.5
+                    rounded-xl
+                    text-slate-400
+                    cursor-not-allowed
+                    transition-all
+                  "
                 >
                   <link.icon className="w-4 h-4" />
+
                   <span className="text-sm font-medium">{link.name}</span>
                 </button>
-                <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-cdm-600 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                  Em breve
-                </span>
+
+                {/* TOOLTIP */}
+
+                <div
+                  className="
+                    absolute
+                    -top-10
+                    left-1/2
+                    -translate-x-1/2
+                    opacity-0
+                    group-hover:opacity-100
+                    transition-all
+                    pointer-events-none
+                  "
+                >
+                  <div
+                    className="
+                      px-3
+                      py-1.5
+                      rounded-lg
+                      bg-slate-900
+                      text-white
+                      text-xs
+                      whitespace-nowrap
+                      shadow-xl
+                    "
+                  >
+                    Em breve
+                  </div>
+                </div>
               </div>
             ))}
 
-            <div className="w-px h-6 bg-gray-300 dark:bg-gray-700 mx-2"></div>
+            {/* DIVIDER */}
 
-            {/* Theme Toggle */}
+            <div className="w-px h-7 bg-slate-200 mx-3" />
+
+            {/* THEME */}
+
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
+              className="
+                w-11
+                h-11
+                rounded-2xl
+                bg-slate-100
+                hover:bg-slate-200
+                flex
+                items-center
+                justify-center
+                transition-all
+                duration-300
+              "
             >
-              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {darkMode ? (
+                <Sun className="w-4 h-4 text-slate-700" />
+              ) : (
+                <Moon className="w-4 h-4 text-slate-700" />
+              )}
             </button>
 
-            {/* User Dropdown */}
-            <div className="relative">
+            {/* USER */}
+
+            <div className="relative ml-1">
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-cdm-50 dark:hover:bg-cdm-900/30 transition-all"
+                className="
+                  flex
+                  items-center
+                  gap-3
+                  pl-3
+                  pr-4
+                  py-2.5
+                  rounded-2xl
+                  hover:bg-slate-100
+                  transition-all
+                "
               >
-                <div className="w-8 h-8 bg-gradient-to-r from-cdm-500 to-cdm-700 rounded-full flex items-center justify-center">
+                {/* AVATAR */}
+
+                <div
+                  className="
+                    w-10
+                    h-10
+                    rounded-2xl
+                    bg-gradient-to-br
+                    from-slate-900
+                    to-slate-700
+                    flex
+                    items-center
+                    justify-center
+                    shadow-lg
+                  "
+                >
                   <User className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {user?.email?.split('@')[0] || 'Usuário'}
-                </span>
-                <ChevronDown className="w-4 h-4 text-gray-500" />
+
+                {/* USER INFO */}
+
+                <div className="text-left">
+                  <p
+                    className="
+                      text-sm
+                      font-semibold
+                      text-slate-800
+                      leading-none
+                    "
+                  >
+                    {user?.email?.split("@")[0] || "Usuário"}
+                  </p>
+
+                  <span
+                    className="
+                      text-xs
+                      text-slate-500
+                    "
+                  >
+                    Administrador
+                  </span>
+                </div>
+
+                <ChevronDown className="w-4 h-4 text-slate-400" />
               </button>
+
+              {/* ============================================ */}
+              {/* DROPDOWN */}
+              {/* ============================================ */}
 
               <AnimatePresence>
                 {dropdownOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+                    initial={{
+                      opacity: 0,
+                      y: -8,
+                      scale: 0.98,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                      scale: 1,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      y: -8,
+                      scale: 0.98,
+                    }}
+                    transition={{
+                      duration: 0.18,
+                    }}
+                    className="
+                      absolute
+                      right-0
+                      mt-3
+                      w-56
+                      rounded-2xl
+                      border
+                      border-slate-200
+                      bg-white/95
+                      backdrop-blur-xl
+                      shadow-[0_20px_60px_rgba(15,23,42,0.12)]
+                      overflow-hidden
+                    "
                   >
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-4 py-3 text-sm text-cdm-600 hover:bg-cdm-50 dark:hover:bg-cdm-900/30 transition-colors"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Sair
-                    </button>
+                    <div className="p-3">
+                      <button
+                        onClick={handleLogout}
+                        className="
+                          w-full
+                          flex
+                          items-center
+                          gap-3
+                          px-4
+                          py-3
+                          rounded-xl
+                          text-sm
+                          font-medium
+                          text-red-600
+                          hover:bg-red-50
+                          transition-all
+                        "
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sair da plataforma
+                      </button>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
           </div>
 
-          {/* Mobile Right Icons */}
+          {/* ============================================ */}
+          {/* MOBILE ACTIONS */}
+          {/* ============================================ */}
+
           <div className="flex items-center gap-2 md:hidden">
+            {/* THEME */}
+
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
+              className="
+                w-10
+                h-10
+                rounded-xl
+                bg-slate-100
+                flex
+                items-center
+                justify-center
+              "
             >
-              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {darkMode ? (
+                <Sun className="w-4 h-4 text-slate-700" />
+              ) : (
+                <Moon className="w-4 h-4 text-slate-700" />
+              )}
             </button>
-            
+
+            {/* USER */}
+
             <div className="relative">
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800"
+                className="
+                  w-10
+                  h-10
+                  rounded-xl
+                  bg-slate-100
+                  flex
+                  items-center
+                  justify-center
+                "
               >
-                <User className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                <User className="w-4 h-4 text-slate-700" />
               </button>
+
               <AnimatePresence>
                 {dropdownOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-50"
+                    initial={{
+                      opacity: 0,
+                      y: -8,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      y: -8,
+                    }}
+                    className="
+                      absolute
+                      right-0
+                      mt-3
+                      w-44
+                      rounded-2xl
+                      border
+                      border-slate-200
+                      bg-white
+                      shadow-xl
+                      overflow-hidden
+                    "
                   >
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-4 py-3 text-sm text-cdm-600 hover:bg-cdm-50 dark:hover:bg-cdm-900/30 transition-colors"
+                      className="
+                        w-full
+                        flex
+                        items-center
+                        gap-2
+                        px-4
+                        py-3
+                        text-sm
+                        font-medium
+                        text-red-600
+                        hover:bg-red-50
+                        transition-all
+                      "
                     >
                       <LogOut className="w-4 h-4" />
                       Sair

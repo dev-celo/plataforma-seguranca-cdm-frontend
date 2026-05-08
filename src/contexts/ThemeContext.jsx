@@ -7,7 +7,8 @@ export const useTheme = () => useContext(ThemeContext);
 export const ThemeProvider = ({ children }) => {
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode');
-    return saved ? JSON.parse(saved) : true; // Default dark mode elegante
+    // 🔥 PADRÃO: false = modo claro (light mode)
+    return saved ? JSON.parse(saved) : false;
   });
 
   useEffect(() => {
