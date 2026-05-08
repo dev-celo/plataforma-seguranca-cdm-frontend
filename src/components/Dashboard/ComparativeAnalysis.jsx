@@ -247,7 +247,7 @@ const ComparativeAnalysis = ({ reports }) => {
           subtitle="Comparativo de eficiência entre os TSTs"
         />
         
-        {['Mônica', 'Vannic'].map(tst => {
+        {['Sued Brandão', 'Flavia Cardoso'].map(tst => {
           const tstReports = reports.filter(r => r.tstResponsavel === tst);
           const tstLastWeek = tstReports.filter(r => {
             const date = parseISO(r.data);
