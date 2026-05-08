@@ -47,16 +47,38 @@ const Navbar = ({ onMenuClick }) => {
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Logo CDM em Destaque */}
-          <Link to="/dashboard" className="flex flex-col items-center group ml-2 md:ml-0">
-            <img 
-              src="/logo.png" 
-              alt="CDM Construtora" 
-              className="w-10 h-10 md:w-14 md:h-14 object-contain rounded-xl group-hover:scale-105 transition-transform duration-300 shadow-md"
-            />
-            <span className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
-              Gestão de Segurança
-            </span>
+          {/* Logo CDM em SUPER DESTAQUE */}
+          <Link to="/dashboard" className="flex flex-col items-center group ml-2 md:ml-0 relative">
+            {/* Glow effect atrás da logo */}
+            <div className="absolute inset-0 bg-gradient-to-r from-cdm-500/20 to-cdm-700/20 rounded-full blur-xl group-hover:blur-2xl transition-all duration-500 -z-10 scale-110"></div>
+            
+            {/* Container com gradiente e brilho */}
+            <div className="relative">
+              {/* Anel de brilho externo */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-cdm-500 via-cdm-600 to-cdm-700 rounded-full opacity-75 group-hover:opacity-100 blur-md group-hover:blur-xl transition-all duration-500"></div>
+              
+              {/* Logo com borda gradiente */}
+              <div className="relative bg-gradient-to-r from-cdm-500 to-cdm-700 rounded-2xl p-1 shadow-2xl group-hover:shadow-cdm-500/50 transition-all duration-500">
+                <img 
+                  src="/logo.png" 
+                  alt="CDM Construtora" 
+                  className="w-12 h-12 md:w-16 md:h-16 object-contain rounded-xl bg-white dark:bg-gray-900 transition-all duration-300 group-hover:scale-105"
+                />
+              </div>
+              
+              {/* Indicador de destaque (pulse) */}
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-lg"></div>
+            </div>
+            
+            {/* Texto com gradiente */}
+            <div className="mt-2 text-center">
+              <span className="text-[10px] md:text-xs font-bold bg-gradient-to-r from-cdm-500 to-cdm-700 bg-clip-text text-transparent">
+                CDM Construtora
+              </span>
+              <span className="text-[8px] md:text-[10px] text-gray-500 dark:text-gray-400 block -mt-0.5">
+                Gestão de Segurança
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
