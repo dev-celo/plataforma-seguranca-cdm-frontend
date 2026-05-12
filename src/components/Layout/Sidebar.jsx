@@ -10,6 +10,7 @@ import {
   TrendingUp, 
   AlertTriangle, 
   CheckCircle,
+  Calendar,        // ← NOVO ícone para Planejamento
   X,
   HelpCircle,
   MessageCircle
@@ -18,6 +19,7 @@ import {
 const Sidebar = ({ isOpen = false, onClose = () => {} }) => {
   const menuItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', color: 'from-blue-500 to-cyan-500' },
+    { path: '/planejamento', icon: Calendar, label: 'Planejamento', color: 'from-indigo-500 to-purple-500' }, // ← NOVO ITEM
     { path: '/reports/list', icon: FileText, label: 'Relatórios', color: 'from-green-500 to-emerald-500' },
     { path: '/reports/new', icon: PlusCircle, label: 'Novo Relatório', color: 'from-purple-500 to-pink-500' },
     { path: '/export', icon: Download, label: 'Exportar Dados', color: 'from-orange-500 to-red-500' },
