@@ -1,7 +1,8 @@
 // pages/Planejamento.jsx
 import React, { useState, useEffect } from 'react';
-import { Plus, RefreshCw } from 'lucide-react';
-import AcessoPlanejamento from '../components/Planejamento/AcessoPlanejamento';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { Plus, RefreshCw, Shield } from 'lucide-react';
 import CardPlanejamento from '../components/Planejamento/CardPlanejamento';
 import ModalCard from '../components/Planejamento/ModalCard';
 import {
@@ -16,19 +17,25 @@ import {
 } from '../services/planejamentoApi';
 
 const Planejamento = () => {
-  const [acessoLiberado, setAcessoLiberado] = useState(() => {
-    return sessionStorage.getItem('acesso_planejamento') === 'liberado';
-  });
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalCardOpen, setModalCardOpen] = useState(false);
   const [cardEditando, setCardEditando] = useState(null);
 
+  // Verificar autenticação
   useEffect(() => {
-    if (acessoLiberado) {
+    if (!authLoading && !user) {
+      navigate('/login');
+    }
+  }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    if (user) {
       carregarCards();
     }
-  }, [acessoLiberado]);
+  }, [user]);
 
   const carregarCards = async () => {
     setLoading(true);
@@ -43,6 +50,8 @@ const Planejamento = () => {
       setLoading(false);
     }
   };
+
+  const isAdmin = user?.email === 'marcelohenrique.backend@gmail.com';
 
   const handleCriarCard = async (dados) => {
     try {
@@ -69,6 +78,10 @@ const Planejamento = () => {
   };
 
   const handleExcluirCard = async (id) => {
+    if (!isAdmin) {
+      alert('Apenas administradores podem excluir cards');
+      return;
+    }
     try {
       const response = await excluirCard(id);
       if (response.success) {
@@ -81,6 +94,10 @@ const Planejamento = () => {
   };
 
   const handleAdicionarTarefa = async (cardId, dados) => {
+    if (!isAdmin) {
+      alert('Apenas administradores podem adicionar tarefas');
+      return;
+    }
     try {
       const response = await adicionarTarefa(cardId, dados);
       if (response.success) {
@@ -93,6 +110,10 @@ const Planejamento = () => {
   };
 
   const handleAtualizarTarefa = async (cardId, tarefaId, dados) => {
+    if (!isAdmin) {
+      alert('Apenas administradores podem editar tarefas');
+      return;
+    }
     try {
       const response = await atualizarTarefa(cardId, tarefaId, dados);
       if (response.success) {
@@ -105,6 +126,10 @@ const Planejamento = () => {
   };
 
   const handleExcluirTarefa = async (cardId, tarefaId) => {
+    if (!isAdmin) {
+      alert('Apenas administradores podem excluir tarefas');
+      return;
+    }
     try {
       const response = await excluirTarefa(cardId, tarefaId);
       if (response.success) {
@@ -129,6 +154,10 @@ const Planejamento = () => {
   };
 
   const handleEditarCard = (card) => {
+    if (!isAdmin) {
+      alert('Apenas administradores podem editar cards');
+      return;
+    }
     setCardEditando(card);
     setModalCardOpen(true);
   };
@@ -142,8 +171,16 @@ const Planejamento = () => {
     setCardEditando(null);
   };
 
-  if (!acessoLiberado) {
-    return <AcessoPlanejamento onAcessoLiberado={setAcessoLiberado} />;
+  if (authLoading || loading) {
+    return (
+      <div className="flex justify-center items-center h-screen" style={{ backgroundColor: '#F5ECD7' }}>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#6a0200' }} />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
   }
 
   return (
@@ -156,7 +193,7 @@ const Planejamento = () => {
               Planejamento Semanal
             </h1>
             <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
-              Gestão de tarefas por responsável
+              {isAdmin ? 'Gestão completa de tarefas' : 'Suas tarefas e acompanhamento'}
             </p>
           </div>
           <div className="flex gap-3">
@@ -168,20 +205,32 @@ const Planejamento = () => {
               <RefreshCw className="w-4 h-4" />
               Atualizar
             </button>
-            <button
-              onClick={() => {
-                setCardEditando(null);
-                setModalCardOpen(true);
-              }}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:opacity-90"
-              style={{ backgroundColor: '#6a0200', color: 'white' }}
-            >
-              <Plus className="w-4 h-4" />
-              Novo Card
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setCardEditando(null);
+                  setModalCardOpen(true);
+                }}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:opacity-90"
+                style={{ backgroundColor: '#6a0200', color: 'white' }}
+              >
+                <Plus className="w-4 h-4" />
+                Novo Card
+              </button>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Badge Admin */}
+      {isAdmin && (
+        <div className="max-w-7xl mx-auto mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs" style={{ backgroundColor: '#6a0200', color: 'white' }}>
+            <Shield className="w-3 h-3" />
+            Modo Administrador
+          </div>
+        </div>
+      )}
 
       {/* Grid de Cards */}
       {loading ? (
@@ -193,9 +242,11 @@ const Planejamento = () => {
           <p className="text-lg" style={{ color: '#6b7280' }}>
             Nenhum card de planejamento encontrado.
           </p>
-          <p className="text-sm mt-2" style={{ color: '#6b7280' }}>
-            Clique em "Novo Card" para começar.
-          </p>
+          {isAdmin && (
+            <p className="text-sm mt-2" style={{ color: '#6b7280' }}>
+              Clique em "Novo Card" para começar.
+            </p>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -203,6 +254,7 @@ const Planejamento = () => {
             <CardPlanejamento
               key={card.id}
               card={card}
+              isAdmin={isAdmin}
               onUpdate={() => handleEditarCard(card)}
               onDelete={handleExcluirCard}
               onToggleTarefa={handleToggleTarefa}
