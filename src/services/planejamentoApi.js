@@ -8,9 +8,11 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const getAuthHeader = async () => {
   const user = auth.currentUser;
   if (!user) {
+    console.error('❌ Nenhum usuário logado!');
     throw new Error('Usuário não autenticado');
   }
   const token = await user.getIdToken();
+  console.log('✅ Token gerado (primeiros 50 chars):', token.substring(0, 50) + '...');
   return { Authorization: `Bearer ${token}` };
 };
 

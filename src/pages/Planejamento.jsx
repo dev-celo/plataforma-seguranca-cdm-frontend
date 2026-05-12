@@ -1,10 +1,10 @@
 // pages/Planejamento.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { Plus, RefreshCw, Shield } from 'lucide-react';
-import CardPlanejamento from '../components/Planejamento/CardPlanejamento';
-import ModalCard from '../components/Planejamento/ModalCard';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { Plus, RefreshCw, Shield } from "lucide-react";
+import CardPlanejamento from "../components/Planejamento/CardPlanejamento";
+import ModalCard from "../components/Planejamento/ModalCard";
 import {
   listarCards,
   criarCard,
@@ -14,7 +14,7 @@ import {
   atualizarTarefa,
   excluirTarefa,
   toggleConcluirTarefa,
-} from '../services/planejamentoApi';
+} from "../services/planejamentoApi";
 
 const Planejamento = () => {
   const { user, loading: authLoading } = useAuth();
@@ -27,12 +27,20 @@ const Planejamento = () => {
   // Verificar autenticação
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/login');
+      navigate("/login");
     }
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
     if (user) {
+      carregarCards();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      console.log("✅ Usuário logado:", user.email);
+      console.log("✅ UID:", user.uid);
       carregarCards();
     }
   }, [user]);
@@ -45,13 +53,13 @@ const Planejamento = () => {
         setCards(response.data);
       }
     } catch (error) {
-      console.error('Erro ao carregar cards:', error);
+      console.error("Erro ao carregar cards:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const isAdmin = user?.email === 'marcelohenrique.backend@gmail.com';
+  const isAdmin = user?.email === "marcelohenrique.backend@gmail.com";
 
   const handleCriarCard = async (dados) => {
     try {
@@ -60,8 +68,8 @@ const Planejamento = () => {
         await carregarCards();
       }
     } catch (error) {
-      console.error('Erro ao criar card:', error);
-      alert('Erro ao criar card');
+      console.error("Erro ao criar card:", error);
+      alert("Erro ao criar card");
     }
   };
 
@@ -72,14 +80,14 @@ const Planejamento = () => {
         await carregarCards();
       }
     } catch (error) {
-      console.error('Erro ao atualizar card:', error);
-      alert('Erro ao atualizar card');
+      console.error("Erro ao atualizar card:", error);
+      alert("Erro ao atualizar card");
     }
   };
 
   const handleExcluirCard = async (id) => {
     if (!isAdmin) {
-      alert('Apenas administradores podem excluir cards');
+      alert("Apenas administradores podem excluir cards");
       return;
     }
     try {
@@ -88,14 +96,14 @@ const Planejamento = () => {
         await carregarCards();
       }
     } catch (error) {
-      console.error('Erro ao excluir card:', error);
-      alert('Erro ao excluir card');
+      console.error("Erro ao excluir card:", error);
+      alert("Erro ao excluir card");
     }
   };
 
   const handleAdicionarTarefa = async (cardId, dados) => {
     if (!isAdmin) {
-      alert('Apenas administradores podem adicionar tarefas');
+      alert("Apenas administradores podem adicionar tarefas");
       return;
     }
     try {
@@ -104,14 +112,14 @@ const Planejamento = () => {
         await carregarCards();
       }
     } catch (error) {
-      console.error('Erro ao adicionar tarefa:', error);
-      alert('Erro ao adicionar tarefa');
+      console.error("Erro ao adicionar tarefa:", error);
+      alert("Erro ao adicionar tarefa");
     }
   };
 
   const handleAtualizarTarefa = async (cardId, tarefaId, dados) => {
     if (!isAdmin) {
-      alert('Apenas administradores podem editar tarefas');
+      alert("Apenas administradores podem editar tarefas");
       return;
     }
     try {
@@ -120,14 +128,14 @@ const Planejamento = () => {
         await carregarCards();
       }
     } catch (error) {
-      console.error('Erro ao atualizar tarefa:', error);
-      alert('Erro ao atualizar tarefa');
+      console.error("Erro ao atualizar tarefa:", error);
+      alert("Erro ao atualizar tarefa");
     }
   };
 
   const handleExcluirTarefa = async (cardId, tarefaId) => {
     if (!isAdmin) {
-      alert('Apenas administradores podem excluir tarefas');
+      alert("Apenas administradores podem excluir tarefas");
       return;
     }
     try {
@@ -136,8 +144,8 @@ const Planejamento = () => {
         await carregarCards();
       }
     } catch (error) {
-      console.error('Erro ao excluir tarefa:', error);
-      alert('Erro ao excluir tarefa');
+      console.error("Erro ao excluir tarefa:", error);
+      alert("Erro ao excluir tarefa");
     }
   };
 
@@ -148,14 +156,14 @@ const Planejamento = () => {
         await carregarCards();
       }
     } catch (error) {
-      console.error('Erro ao alternar status da tarefa:', error);
-      alert('Erro ao atualizar tarefa');
+      console.error("Erro ao alternar status da tarefa:", error);
+      alert("Erro ao atualizar tarefa");
     }
   };
 
   const handleEditarCard = (card) => {
     if (!isAdmin) {
-      alert('Apenas administradores podem editar cards');
+      alert("Apenas administradores podem editar cards");
       return;
     }
     setCardEditando(card);
@@ -173,8 +181,14 @@ const Planejamento = () => {
 
   if (authLoading || loading) {
     return (
-      <div className="flex justify-center items-center h-screen" style={{ backgroundColor: '#F5ECD7' }}>
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#6a0200' }} />
+      <div
+        className="flex justify-center items-center h-screen"
+        style={{ backgroundColor: "#F5ECD7" }}
+      >
+        <div
+          className="animate-spin rounded-full h-12 w-12 border-b-2"
+          style={{ borderColor: "#6a0200" }}
+        />
       </div>
     );
   }
@@ -184,23 +198,25 @@ const Planejamento = () => {
   }
 
   return (
-    <div className="min-h-screen p-6" style={{ backgroundColor: '#F5ECD7' }}>
+    <div className="min-h-screen p-6" style={{ backgroundColor: "#F5ECD7" }}>
       {/* Cabeçalho */}
       <div className="max-w-7xl mx-auto mb-8">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold" style={{ color: '#6a0200' }}>
+            <h1 className="text-3xl font-bold" style={{ color: "#6a0200" }}>
               Planejamento Semanal
             </h1>
-            <p className="text-sm mt-1" style={{ color: '#6b7280' }}>
-              {isAdmin ? 'Gestão completa de tarefas' : 'Suas tarefas e acompanhamento'}
+            <p className="text-sm mt-1" style={{ color: "#6b7280" }}>
+              {isAdmin
+                ? "Gestão completa de tarefas"
+                : "Suas tarefas e acompanhamento"}
             </p>
           </div>
           <div className="flex gap-3">
             <button
               onClick={carregarCards}
               className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:opacity-80"
-              style={{ backgroundColor: '#b7b5b6', color: '#2C2C2C' }}
+              style={{ backgroundColor: "#b7b5b6", color: "#2C2C2C" }}
             >
               <RefreshCw className="w-4 h-4" />
               Atualizar
@@ -212,7 +228,7 @@ const Planejamento = () => {
                   setModalCardOpen(true);
                 }}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:opacity-90"
-                style={{ backgroundColor: '#6a0200', color: 'white' }}
+                style={{ backgroundColor: "#6a0200", color: "white" }}
               >
                 <Plus className="w-4 h-4" />
                 Novo Card
@@ -225,7 +241,10 @@ const Planejamento = () => {
       {/* Badge Admin */}
       {isAdmin && (
         <div className="max-w-7xl mx-auto mb-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs" style={{ backgroundColor: '#6a0200', color: 'white' }}>
+          <div
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs"
+            style={{ backgroundColor: "#6a0200", color: "white" }}
+          >
             <Shield className="w-3 h-3" />
             Modo Administrador
           </div>
@@ -235,15 +254,18 @@ const Planejamento = () => {
       {/* Grid de Cards */}
       {loading ? (
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#6a0200' }} />
+          <div
+            className="animate-spin rounded-full h-12 w-12 border-b-2"
+            style={{ borderColor: "#6a0200" }}
+          />
         </div>
       ) : cards.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-lg" style={{ color: '#6b7280' }}>
+          <p className="text-lg" style={{ color: "#6b7280" }}>
             Nenhum card de planejamento encontrado.
           </p>
           {isAdmin && (
-            <p className="text-sm mt-2" style={{ color: '#6b7280' }}>
+            <p className="text-sm mt-2" style={{ color: "#6b7280" }}>
               Clique em "Novo Card" para começar.
             </p>
           )}
@@ -275,7 +297,7 @@ const Planejamento = () => {
         }}
         onSave={handleSaveCard}
         card={cardEditando}
-        title={cardEditando ? 'Editar Card' : 'Novo Card'}
+        title={cardEditando ? "Editar Card" : "Novo Card"}
       />
     </div>
   );
