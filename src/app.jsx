@@ -44,11 +44,11 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/planejamento" element={<Planejamento />} />
             <Route element={<ProtectedRoute />}>
               <Route element={<Layout />}>
                 <Route path="/" element={<Navigate to="/dashboard" />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/planejamento" element={<Planejamento />} />
                 <Route path="/reports/new" element={<ReportForm />} />
                 <Route path="/reports/edit/:id" element={<ReportForm />} />
                 <Route path="/reports/list" element={<ReportList />} />
