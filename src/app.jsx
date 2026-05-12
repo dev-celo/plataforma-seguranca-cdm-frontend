@@ -11,6 +11,7 @@ import ReportForm from './components/Reports/ReportForm';
 import ReportList from './components/Reports/ReportList';
 import ExportExcel from './components/Export/ExportExcel';
 import Layout from './components/Layout/Layout';
+import Planejamento from './pages/Planejamento';
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/planejamento" element={<Planejamento />} />
             <Route element={<ProtectedRoute />}>
               <Route element={<Layout />}>
                 <Route path="/" element={<Navigate to="/dashboard" />} />
