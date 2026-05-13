@@ -4,8 +4,10 @@ import { User, Mail, Briefcase, Plus, Edit2, Trash2, CheckCircle } from 'lucide-
 import TarefaItem from './TarefaItem';
 import ModalTarefa from './ModalTarefa';
 import ConfirmDelete from './ConfirmDelete';
+import { useAuth } from '../../contexts/AuthContext';
 
-const CardPlanejamento = ({ card, onUpdate, onDelete, onToggleTarefa, onAddTarefa, onEditTarefa, onDeleteTarefa }) => {
+const CardPlanejamento = ({ card, isAdmin, onUpdate, onDelete, onToggleTarefa, onAddTarefa, onEditTarefa, onDeleteTarefa }) => {
+  const { user } = useAuth();
   const [modalTarefaOpen, setModalTarefaOpen] = useState(false);
   const [tarefaEditando, setTarefaEditando] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, tipo: null, id: null });
@@ -15,7 +17,15 @@ const CardPlanejamento = ({ card, onUpdate, onDelete, onToggleTarefa, onAddTaref
   const concluidas = tarefas.filter(t => t.status === 'concluida').length;
   const progresso = totalTarefas > 0 ? (concluidas / totalTarefas) * 100 : 0;
   
+  // 🔥 Verificar se o usuário atual é o dono do card
+  const isOwner = user?.email === card.email;
+  const canAddTask = isAdmin || isOwner;
+  
   const handleAddTarefa = (dados) => {
+    console.log('📝 Adicionando tarefa ao card:', card.id);
+    console.log('👤 Dono do card:', card.email);
+    console.log('🔑 Usuário logado:', user?.email);
+    console.log('✅ Pode adicionar?', canAddTask);
     onAddTarefa(card.id, dados);
   };
   
@@ -61,12 +71,14 @@ const CardPlanejamento = ({ card, onUpdate, onDelete, onToggleTarefa, onAddTaref
               </span>
             </div>
           </div>
-          <button
-            onClick={() => setDeleteConfirm({ isOpen: true, tipo: 'card', id: card.id })}
-            className="p-1 rounded transition-all hover:bg-white/20"
-          >
-            <Trash2 className="w-4 h-4 text-white" />
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setDeleteConfirm({ isOpen: true, tipo: 'card', id: card.id })}
+              className="p-1 rounded transition-all hover:bg-white/20"
+            >
+              <Trash2 className="w-4 h-4 text-white" />
+            </button>
+          )}
         </div>
       </div>
       
@@ -99,6 +111,7 @@ const CardPlanejamento = ({ card, onUpdate, onDelete, onToggleTarefa, onAddTaref
               <TarefaItem
                 key={tarefa.id}
                 tarefa={tarefa}
+                isAdmin={isAdmin}
                 onToggle={() => onToggleTarefa(card.id, tarefa.id)}
                 onEdit={() => handleEditTarefa(tarefa)}
                 onDelete={() => setDeleteConfirm({ isOpen: true, tipo: 'tarefa', id: tarefa.id, cardId: card.id })}
@@ -107,18 +120,20 @@ const CardPlanejamento = ({ card, onUpdate, onDelete, onToggleTarefa, onAddTaref
           )}
         </div>
         
-        {/* Botão Adicionar Tarefa */}
-        <button
-          onClick={() => {
-            setTarefaEditando(null);
-            setModalTarefaOpen(true);
-          }}
-          className="w-full mt-4 py-2 rounded-lg font-medium transition-all hover:opacity-90 flex items-center justify-center gap-2"
-          style={{ backgroundColor: '#F5A623', color: '#2C2C2C' }}
-        >
-          <Plus className="w-4 h-4" />
-          Adicionar Tarefa
-        </button>
+        {/* Botão Adicionar Tarefa - visível para admin ou dono do card */}
+        {canAddTask && (
+          <button
+            onClick={() => {
+              setTarefaEditando(null);
+              setModalTarefaOpen(true);
+            }}
+            className="w-full mt-4 py-2 rounded-lg font-medium transition-all hover:opacity-90 flex items-center justify-center gap-2"
+            style={{ backgroundColor: '#F5A623', color: '#2C2C2C' }}
+          >
+            <Plus className="w-4 h-4" />
+            Adicionar Tarefa
+          </button>
+        )}
       </div>
       
       {/* Modais */}
