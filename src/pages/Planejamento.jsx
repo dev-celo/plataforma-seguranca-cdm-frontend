@@ -2,7 +2,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { Plus, RefreshCw, Shield, Calendar, LayoutGrid, Sparkles } from "lucide-react";
+import {
+  Plus,
+  RefreshCw,
+  Shield,
+  Calendar,
+  LayoutGrid,
+  Sparkles,
+} from "lucide-react";
 import CardPlanejamento from "../components/Planejamento/CardPlanejamento";
 import ModalCard from "../components/Planejamento/ModalCard";
 import {
@@ -94,18 +101,27 @@ const Planejamento = () => {
   };
 
   const handleAdicionarTarefa = async (cardId, dados) => {
-    if (!isAdmin) {
-      alert("Apenas administradores podem adicionar tarefas");
-      return;
-    }
+    // 🔥 Removendo o bloqueio de admin - qualquer usuário pode adicionar tarefas no seu card
+    // O backend já valida se o usuário é dono do card ou admin
+
+    console.log(
+      "📝 [handleAdicionarTarefa] Adicionando tarefa ao card:",
+      cardId,
+    );
+    console.log("📝 [handleAdicionarTarefa] Dados:", dados);
+
     try {
       const response = await adicionarTarefa(cardId, dados);
       if (response.success) {
+        console.log("✅ Tarefa adicionada com sucesso!");
         await carregarCards();
+      } else {
+        console.error("❌ Erro na resposta:", response);
+        alert(response.error || "Erro ao adicionar tarefa");
       }
     } catch (error) {
-      console.error("Erro ao adicionar tarefa:", error);
-      alert("Erro ao adicionar tarefa");
+      console.error("❌ Erro ao adicionar tarefa:", error);
+      alert("Erro ao adicionar tarefa. Verifique se você tem permissão.");
     }
   };
 
@@ -204,7 +220,9 @@ const Planejamento = () => {
                 Planejamento Semanal
               </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {isAdmin ? "Gestão completa de tarefas" : "Suas tarefas e acompanhamento"}
+                {isAdmin
+                  ? "Gestão completa de tarefas"
+                  : "Suas tarefas e acompanhamento"}
               </p>
             </div>
           </div>
@@ -250,7 +268,9 @@ const Planejamento = () => {
         ) : cards.length === 0 ? (
           <div className="text-center py-16 glass-card rounded-2xl">
             <LayoutGrid className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-            <p className="text-gray-500 dark:text-gray-400">Nenhum card de planejamento encontrado.</p>
+            <p className="text-gray-500 dark:text-gray-400">
+              Nenhum card de planejamento encontrado.
+            </p>
             {isAdmin && (
               <p className="text-sm text-gray-400 mt-2">
                 Clique em "Novo Card" para começar.
