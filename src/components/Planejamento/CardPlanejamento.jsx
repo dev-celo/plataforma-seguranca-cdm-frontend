@@ -1,31 +1,38 @@
 // components/Planejamento/CardPlanejamento.jsx
 import React, { useState } from 'react';
-import { User, Mail, Briefcase, Plus, Edit2, Trash2, CheckCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Mail, Briefcase, Plus, Edit2, Trash2, MoreVertical, CheckCircle2, Circle, Clock, Calendar, TrendingUp } from 'lucide-react';
 import TarefaItem from './TarefaItem';
 import ModalTarefa from './ModalTarefa';
 import ConfirmDelete from './ConfirmDelete';
 import { useAuth } from '../../contexts/AuthContext';
 
-const CardPlanejamento = ({ card, isAdmin, onUpdate, onDelete, onToggleTarefa, onAddTarefa, onEditTarefa, onDeleteTarefa }) => {
+const CardPlanejamento = ({ card, isAdmin, onUpdate, onDelete, onToggleTarefa, onAddTarefa, onEditTarefa, onDeleteTarefa, index }) => {
   const { user } = useAuth();
   const [modalTarefaOpen, setModalTarefaOpen] = useState(false);
   const [tarefaEditando, setTarefaEditando] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, tipo: null, id: null });
+  const [isExpanded, setIsExpanded] = useState(false);
   
   const tarefas = card.tarefas || [];
   const totalTarefas = tarefas.length;
   const concluidas = tarefas.filter(t => t.status === 'concluida').length;
   const progresso = totalTarefas > 0 ? (concluidas / totalTarefas) * 100 : 0;
   
-  // 🔥 Verificar se o usuário atual é o dono do card
   const isOwner = user?.email === card.email;
   const canAddTask = isAdmin || isOwner;
   
+  // Calcular tarefas atrasadas
+  const tarefasAtrasadas = tarefas.filter(t => t.status === 'atrasada').length;
+  
+  // Estatísticas para o card
+  const stats = [
+    { label: 'Total', value: totalTarefas, color: 'text-gray-500' },
+    { label: 'Concluídas', value: concluidas, color: 'text-emerald-500' },
+    { label: 'Atrasadas', value: tarefasAtrasadas, color: 'text-rose-500' },
+  ];
+  
   const handleAddTarefa = (dados) => {
-    console.log('📝 Adicionando tarefa ao card:', card.id);
-    console.log('👤 Dono do card:', card.email);
-    console.log('🔑 Usuário logado:', user?.email);
-    console.log('✅ Pode adicionar?', canAddTask);
     onAddTarefa(card.id, dados);
   };
   
@@ -49,24 +56,32 @@ const CardPlanejamento = ({ card, isAdmin, onUpdate, onDelete, onToggleTarefa, o
   };
   
   return (
-    <div
-      className="rounded-2xl overflow-hidden shadow-lg transition-all hover:shadow-xl"
-      style={{ backgroundColor: '#D4C4A8', border: '1px solid #b7b5b6' }}
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.05 }}
+      whileHover={{ y: -5, transition: { duration: 0.2 } }}
+      className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 hover:shadow-2xl transition-all duration-300"
     >
-      {/* Header do Card */}
-      <div className="p-4" style={{ backgroundColor: '#6a0200' }}>
+      {/* Gradiente de fundo sutil no hover */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800/50 dark:to-gray-800 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      
+      {/* Header do Card - Design Minimalista Luxo */}
+      <div className="relative px-5 pt-5 pb-3 border-b border-gray-100 dark:border-gray-700">
         <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <h3 className="text-lg font-bold text-white">{card.responsavel}</h3>
-            <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-white/80">
+          <div>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight">
+              {card.responsavel}
+            </h3>
+            <div className="flex flex-wrap items-center gap-3 mt-1.5">
               {card.cargo && (
-                <span className="flex items-center gap-1">
-                  <Briefcase className="w-3 h-3" />
+                <span className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  <Briefcase className="w-3.5 h-3.5" />
                   {card.cargo}
                 </span>
               )}
-              <span className="flex items-center gap-1">
-                <Mail className="w-3 h-3" />
+              <span className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                <Mail className="w-3.5 h-3.5" />
                 {card.email}
               </span>
             </div>
@@ -74,40 +89,78 @@ const CardPlanejamento = ({ card, isAdmin, onUpdate, onDelete, onToggleTarefa, o
           {isAdmin && (
             <button
               onClick={() => setDeleteConfirm({ isOpen: true, tipo: 'card', id: card.id })}
-              className="p-1 rounded transition-all hover:bg-white/20"
+              className="p-1.5 rounded-lg text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all"
             >
-              <Trash2 className="w-4 h-4 text-white" />
+              <Trash2 className="w-4 h-4" />
             </button>
           )}
         </div>
       </div>
       
-      {/* Corpo do Card */}
-      <div className="p-4">
-        {/* Barra de Progresso */}
-        {totalTarefas > 0 && (
-          <div className="mb-4">
-            <div className="flex justify-between text-xs mb-1" style={{ color: '#2C2C2C' }}>
-              <span>Progresso</span>
-              <span>{concluidas}/{totalTarefas} tarefas</span>
+      {/* Stats Cards */}
+      <div className="px-5 pt-4">
+        <div className="grid grid-cols-3 gap-2">
+          {stats.map((stat, idx) => (
+            <div key={idx} className="text-center p-2 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+              <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
+              <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">{stat.label}</p>
             </div>
-            <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: '#b7b5b6' }}>
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${progresso}%`, backgroundColor: '#4A5D23' }}
-              />
+          ))}
+        </div>
+      </div>
+      
+      {/* Barra de Progresso Premium */}
+      {totalTarefas > 0 && (
+        <div className="px-5 pt-4">
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-3.5 h-3.5 text-gray-400" />
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Progresso geral</span>
             </div>
+            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+              {Math.round(progresso)}%
+            </span>
           </div>
-        )}
+          <div className="relative h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${progresso}%` }}
+              transition={{ duration: 0.8, delay: index * 0.1, ease: "easeOut" }}
+              className="absolute h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500"
+            />
+          </div>
+        </div>
+      )}
+      
+      {/* Lista de Tarefas */}
+      <div className="px-5 pt-4">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            Tarefas • {totalTarefas}
+          </span>
+          {tarefas.length > 3 && (
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-xs font-medium text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            >
+              {isExpanded ? 'Ver menos' : `Ver +${tarefas.length - 3}`}
+            </button>
+          )}
+        </div>
         
-        {/* Lista de Tarefas */}
-        <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+        <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1 custom-scrollbar">
           {tarefas.length === 0 ? (
-            <div className="text-center py-4 text-sm" style={{ color: '#6b7280' }}>
-              Nenhuma tarefa cadastrada
+            <div className="text-center py-6">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-gray-300" />
+              </div>
+              <p className="text-sm text-gray-400">Nenhuma tarefa cadastrada</p>
+              {canAddTask && (
+                <p className="text-xs text-gray-400 mt-1">Clique em "Adicionar" para começar</p>
+              )}
             </div>
           ) : (
-            tarefas.map(tarefa => (
+            tarefas.slice(0, isExpanded ? undefined : 3).map(tarefa => (
               <TarefaItem
                 key={tarefa.id}
                 tarefa={tarefa}
@@ -119,22 +172,25 @@ const CardPlanejamento = ({ card, isAdmin, onUpdate, onDelete, onToggleTarefa, o
             ))
           )}
         </div>
-        
-        {/* Botão Adicionar Tarefa - visível para admin ou dono do card */}
-        {canAddTask && (
-          <button
+      </div>
+      
+      {/* Botão Adicionar Tarefa Premium */}
+      {canAddTask && (
+        <div className="px-5 pb-5 pt-3">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => {
               setTarefaEditando(null);
               setModalTarefaOpen(true);
             }}
-            className="w-full mt-4 py-2 rounded-lg font-medium transition-all hover:opacity-90 flex items-center justify-center gap-2"
-            style={{ backgroundColor: '#F5A623', color: '#2C2C2C' }}
+            className="w-full py-2.5 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 bg-gradient-to-r from-gray-900 to-gray-800 hover:from-gray-800 hover:to-gray-700 text-white shadow-lg hover:shadow-xl"
           >
             <Plus className="w-4 h-4" />
             Adicionar Tarefa
-          </button>
-        )}
-      </div>
+          </motion.button>
+        </div>
+      )}
       
       {/* Modais */}
       <ModalTarefa
@@ -167,7 +223,7 @@ const CardPlanejamento = ({ card, isAdmin, onUpdate, onDelete, onToggleTarefa, o
             : 'Tem certeza que deseja excluir esta tarefa?'
         }
       />
-    </div>
+    </motion.div>
   );
 };
 
