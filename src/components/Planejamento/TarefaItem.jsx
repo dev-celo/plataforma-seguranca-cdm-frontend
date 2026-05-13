@@ -2,127 +2,129 @@
 import React, { useState } from 'react';
 import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CheckCircle, Circle, Edit2, Trash2, ExternalLink, Calendar, Clock } from 'lucide-react';
+import { CheckCircle2, Circle, Edit2, Trash2, AlertCircle, Clock, CalendarDays } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-const TarefaItem = ({ tarefa, onToggle, onEdit, onDelete }) => {
+const TarefaItem = ({ tarefa, isAdmin, onToggle, onEdit, onDelete }) => {
   const [isHovered, setIsHovered] = useState(false);
   
-  const hoje = new Date().toISOString().split('T')[0];
-  const isAtrasada = tarefa.status === 'atrasada';
   const isConcluida = tarefa.status === 'concluida';
+  const isAtrasada = tarefa.status === 'atrasada';
   
   const diasRestantes = differenceInDays(new Date(tarefa.dataFim), new Date(), { locale: ptBR });
-  const dataFim = format(new Date(tarefa.dataFim), 'dd/MM/yyyy', { locale: ptBR });
-  const dataInicio = format(new Date(tarefa.dataInicio), 'dd/MM/yyyy', { locale: ptBR });
+  const dataFim = format(new Date(tarefa.dataFim), 'dd/MM/yyyy');
+  const dataInicio = format(new Date(tarefa.dataInicio), 'dd/MM/yyyy');
   
-  let statusColor = '';
-  let statusText = '';
+  let statusConfig = {
+    icon: null,
+    text: '',
+    color: '',
+    bgColor: '',
+  };
   
   if (isConcluida) {
-    statusColor = '#4A5D23';
-    statusText = 'Concluída';
+    statusConfig = {
+      icon: <CheckCircle2 className="w-3.5 h-3.5" />,
+      text: 'Concluída',
+      color: 'text-emerald-600 dark:text-emerald-400',
+      bgColor: 'bg-emerald-50 dark:bg-emerald-900/20',
+    };
   } else if (isAtrasada) {
-    statusColor = '#ff5f1f';
-    statusText = 'Atrasada';
+    statusConfig = {
+      icon: <AlertCircle className="w-3.5 h-3.5" />,
+      text: 'Atrasada',
+      color: 'text-rose-600 dark:text-rose-400',
+      bgColor: 'bg-rose-50 dark:bg-rose-900/20',
+    };
   } else {
-    statusColor = '#434a2b';
-    statusText = 'Em andamento';
+    statusConfig = {
+      icon: <Clock className="w-3.5 h-3.5" />,
+      text: 'Em andamento',
+      color: 'text-amber-600 dark:text-amber-400',
+      bgColor: 'bg-amber-50 dark:bg-amber-900/20',
+    };
   }
   
   return (
-    <div
-      className={`p-3 rounded-lg transition-all ${isConcluida ? 'opacity-70' : ''}`}
-      style={{
-        backgroundColor: '#F5ECD7',
-        border: `1px solid ${isHovered ? '#6a0200' : '#b7b5b6'}`,
-      }}
+    <motion.div
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      whileHover={{ x: 4 }}
+      className={`p-3 rounded-xl transition-all duration-200 cursor-pointer ${
+        isConcluida 
+          ? 'bg-gray-100 dark:bg-gray-800/50' 
+          : isHovered 
+            ? 'bg-gray-100 dark:bg-gray-700/50' 
+            : 'bg-gray-50 dark:bg-gray-800/30'
+      } border border-gray-100 dark:border-gray-700/50`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="flex items-start gap-3">
-        {/* Checkbox de conclusão */}
+        {/* Toggle Button */}
         <button
           onClick={onToggle}
-          className="mt-0.5 transition-all hover:scale-110"
+          className="mt-0.5 transition-transform hover:scale-110 focus:outline-none"
         >
           {isConcluida ? (
-            <CheckCircle className="w-5 h-5" style={{ color: '#4A5D23' }} />
+            <CheckCircle2 className="w-5 h-5 text-emerald-500" />
           ) : (
-            <Circle className="w-5 h-5" style={{ color: '#b7b5b6' }} />
+            <Circle className="w-5 h-5 text-gray-300 hover:text-gray-400 transition-colors" />
           )}
         </button>
         
-        {/* Conteúdo da tarefa */}
-        <div className="flex-1">
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            <h4 className="font-semibold text-sm" style={{ color: '#2C2C2C' }}>
-              {tarefa.titulo}
-            </h4>
-            <span
-              className="text-xs px-2 py-0.5 rounded-full"
-              style={{
-                backgroundColor: statusColor,
-                color: statusColor === '#F5ECD7' ? '#2C2C2C' : 'white',
-              }}
-            >
-              {statusText}
-            </span>
-          </div>
+        {/* Conteúdo */}
+        <div className="flex-1 min-w-0">
+          <h4 className={`font-medium text-sm ${isConcluida ? 'text-gray-400 line-through' : 'text-gray-700 dark:text-gray-200'}`}>
+            {tarefa.titulo}
+          </h4>
           
           {tarefa.descricao && (
-            <p className="text-xs mb-2" style={{ color: '#6b7280' }}>
-              {tarefa.descricao}
-            </p>
+            <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{tarefa.descricao}</p>
           )}
           
-          <div className="flex flex-wrap items-center gap-3 text-xs">
-            <div className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" style={{ color: '#b7b5b6' }} />
+          <div className="flex flex-wrap items-center gap-3 mt-2">
+            <div className="flex items-center gap-1 text-[10px] text-gray-400">
+              <CalendarDays className="w-3 h-3" />
               <span>{dataInicio} → {dataFim}</span>
             </div>
             
-            {!isConcluida && !isAtrasada && diasRestantes >= 0 && (
-              <div className="flex items-center gap-1">
-                <Clock className="w-3 h-3" style={{ color: '#b7b5b6' }} />
+            {!isConcluida && diasRestantes >= 0 && (
+              <div className="flex items-center gap-1 text-[10px] text-gray-400">
+                <Clock className="w-3 h-3" />
                 <span>{diasRestantes} dias restantes</span>
               </div>
-            )}
-            
-            {tarefa.anexo && (
-              <a
-                href={tarefa.anexo}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 hover:opacity-70 transition-opacity"
-                style={{ color: '#6a0200' }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <ExternalLink className="w-3 h-3" />
-                <span>Anexo</span>
-              </a>
             )}
           </div>
         </div>
         
-        {/* Botões de ação */}
-        <div className="flex gap-1">
-          <button
-            onClick={onEdit}
-            className="p-1 rounded transition-all hover:opacity-70"
-            style={{ color: '#F5A623' }}
-          >
-            <Edit2 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={onDelete}
-            className="p-1 rounded transition-all hover:opacity-70"
-            style={{ color: '#ff5f1f' }}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+        {/* Badge Status */}
+        <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${statusConfig.bgColor}`}>
+          {statusConfig.icon}
+          <span className={`text-[10px] font-medium ${statusConfig.color}`}>{statusConfig.text}</span>
         </div>
+        
+        {/* Actions - Apenas admin */}
+        {isAdmin && (
+          <div className="flex gap-1">
+            <button
+              onClick={onEdit}
+              className="p-1 rounded text-gray-400 hover:text-amber-500 transition-colors"
+              title="Editar tarefa"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={onDelete}
+              className="p-1 rounded text-gray-400 hover:text-rose-500 transition-colors"
+              title="Excluir tarefa"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
       </div>
-    </div>
+    </motion.div>
   );
 };
 

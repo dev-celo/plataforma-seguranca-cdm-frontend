@@ -1,7 +1,7 @@
 // components/Planejamento/CardPlanejamento.jsx
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Briefcase, Plus, Edit2, Trash2, MoreVertical, CheckCircle2, Circle, Clock, Calendar, TrendingUp } from 'lucide-react';
+import { Mail, Briefcase, Plus, Edit2, Trash2, TrendingUp, Calendar } from 'lucide-react';
 import TarefaItem from './TarefaItem';
 import ModalTarefa from './ModalTarefa';
 import ConfirmDelete from './ConfirmDelete';
@@ -13,6 +13,7 @@ const CardPlanejamento = ({ card, isAdmin, onUpdate, onDelete, onToggleTarefa, o
   const [tarefaEditando, setTarefaEditando] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, tipo: null, id: null });
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   
   const tarefas = card.tarefas || [];
   const totalTarefas = tarefas.length;
@@ -22,14 +23,12 @@ const CardPlanejamento = ({ card, isAdmin, onUpdate, onDelete, onToggleTarefa, o
   const isOwner = user?.email === card.email;
   const canAddTask = isAdmin || isOwner;
   
-  // Calcular tarefas atrasadas
   const tarefasAtrasadas = tarefas.filter(t => t.status === 'atrasada').length;
   
-  // Estatísticas para o card
   const stats = [
-    { label: 'Total', value: totalTarefas, color: 'text-gray-500' },
-    { label: 'Concluídas', value: concluidas, color: 'text-emerald-500' },
-    { label: 'Atrasadas', value: tarefasAtrasadas, color: 'text-rose-500' },
+    { label: 'TOTAL', value: totalTarefas, color: 'text-gray-600 dark:text-gray-400' },
+    { label: 'CONCLUSÕES', value: concluidas, color: 'text-emerald-600 dark:text-emerald-400' },
+    { label: 'ATRASADAS', value: tarefasAtrasadas, color: 'text-rose-600 dark:text-rose-400' },
   ];
   
   const handleAddTarefa = (dados) => {
@@ -60,17 +59,33 @@ const CardPlanejamento = ({ card, isAdmin, onUpdate, onDelete, onToggleTarefa, o
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.05 }}
-      whileHover={{ y: -5, transition: { duration: 0.2 } }}
-      className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 hover:shadow-2xl transition-all duration-300"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`relative rounded-2xl overflow-hidden transition-all duration-300 ${
+        isHovered 
+          ? 'shadow-2xl -translate-y-1' 
+          : 'shadow-lg'
+      }`}
+      style={{
+        backgroundColor: isHovered ? '#ffffff' : '#f8fafc',
+        border: '1px solid #e2e8f0',
+      }}
     >
-      {/* Gradiente de fundo sutil no hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800/50 dark:to-gray-800 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      {/* Efeito de gradiente sutil no hover (sem atrapalhar legibilidade) */}
+      <div 
+        className={`absolute inset-0 transition-opacity duration-500 pointer-events-none ${
+          isHovered ? 'opacity-100' : 'opacity-0'
+        }`}
+        style={{
+          background: 'radial-gradient(circle at top right, rgba(37, 99, 235, 0.03), transparent 70%)',
+        }}
+      />
       
-      {/* Header do Card - Design Minimalista Luxo */}
-      <div className="relative px-5 pt-5 pb-3 border-b border-gray-100 dark:border-gray-700">
+      {/* Header do Card */}
+      <div className="relative px-5 pt-5 pb-3">
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 tracking-tight">
               {card.responsavel}
             </h3>
             <div className="flex flex-wrap items-center gap-3 mt-1.5">
@@ -98,18 +113,18 @@ const CardPlanejamento = ({ card, isAdmin, onUpdate, onDelete, onToggleTarefa, o
       </div>
       
       {/* Stats Cards */}
-      <div className="px-5 pt-4">
+      <div className="px-5 pt-2">
         <div className="grid grid-cols-3 gap-2">
           {stats.map((stat, idx) => (
-            <div key={idx} className="text-center p-2 rounded-xl bg-gray-50 dark:bg-gray-800/50">
-              <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
-              <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">{stat.label}</p>
+            <div key={idx} className="text-center p-2 rounded-xl bg-gray-100/80 dark:bg-gray-800/50">
+              <p className={`text-lg font-bold ${stat.color}`}>{stat.value}</p>
+              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{stat.label}</p>
             </div>
           ))}
         </div>
       </div>
       
-      {/* Barra de Progresso Premium */}
+      {/* Barra de Progresso */}
       {totalTarefas > 0 && (
         <div className="px-5 pt-4">
           <div className="flex justify-between items-center mb-2">
@@ -121,7 +136,7 @@ const CardPlanejamento = ({ card, isAdmin, onUpdate, onDelete, onToggleTarefa, o
               {Math.round(progresso)}%
             </span>
           </div>
-          <div className="relative h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+          <div className="relative h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progresso}%` }}
@@ -174,7 +189,7 @@ const CardPlanejamento = ({ card, isAdmin, onUpdate, onDelete, onToggleTarefa, o
         </div>
       </div>
       
-      {/* Botão Adicionar Tarefa Premium */}
+      {/* Botão Adicionar Tarefa */}
       {canAddTask && (
         <div className="px-5 pb-5 pt-3">
           <motion.button
@@ -184,7 +199,7 @@ const CardPlanejamento = ({ card, isAdmin, onUpdate, onDelete, onToggleTarefa, o
               setTarefaEditando(null);
               setModalTarefaOpen(true);
             }}
-            className="w-full py-2.5 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 bg-gradient-to-r from-gray-900 to-gray-800 hover:from-gray-800 hover:to-gray-700 text-white shadow-lg hover:shadow-xl"
+            className="w-full py-2.5 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 bg-gray-900 hover:bg-gray-800 text-white shadow-md hover:shadow-lg"
           >
             <Plus className="w-4 h-4" />
             Adicionar Tarefa
