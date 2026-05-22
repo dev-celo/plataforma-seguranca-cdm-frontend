@@ -30,6 +30,10 @@ const Planejamento = () => {
   const [loading, setLoading] = useState(true);
   const [modalCardOpen, setModalCardOpen] = useState(false);
   const [cardEditando, setCardEditando] = useState(null);
+  
+  // 🔥 FILTROS
+  const [filtroPeriodo, setFiltroPeriodo] = useState('todas');
+  const [filtroStatus, setFiltroStatus] = useState('todos');
 
   // Verificar autenticação
   useEffect(() => {
@@ -59,6 +63,34 @@ const Planejamento = () => {
   };
 
   const isAdmin = user?.email === "marcelohenrique.backend@gmail.com";
+
+  // 🔥 FUNÇÃO DE FILTRO DOS CARDS
+  const cardsFiltrados = cards.filter(card => {
+    const tarefasCard = card.tarefas || [];
+    
+    // Filtro de período (baseado na data de criação da tarefa)
+    if (filtroPeriodo !== 'todas') {
+      let dataLimite = new Date();
+      if (filtroPeriodo === 'semana') {
+        dataLimite.setDate(dataLimite.getDate() - 7);
+      } else if (filtroPeriodo === '15dias') {
+        dataLimite.setDate(dataLimite.getDate() - 15);
+      } else if (filtroPeriodo === 'mes') {
+        dataLimite.setMonth(dataLimite.getMonth() - 1);
+      }
+      
+      const temTarefaNoPeriodo = tarefasCard.some(t => new Date(t.createdAt) >= dataLimite);
+      if (!temTarefaNoPeriodo) return false;
+    }
+    
+    // Filtro de status
+    if (filtroStatus !== 'todos') {
+      const temTarefaComStatus = tarefasCard.some(t => t.status === filtroStatus);
+      if (!temTarefaComStatus) return false;
+    }
+    
+    return true;
+  });
 
   const handleCriarCard = async (dados) => {
     try {
@@ -101,13 +133,7 @@ const Planejamento = () => {
   };
 
   const handleAdicionarTarefa = async (cardId, dados) => {
-    // 🔥 Removendo o bloqueio de admin - qualquer usuário pode adicionar tarefas no seu card
-    // O backend já valida se o usuário é dono do card ou admin
-
-    console.log(
-      "📝 [handleAdicionarTarefa] Adicionando tarefa ao card:",
-      cardId,
-    );
+    console.log("📝 [handleAdicionarTarefa] Adicionando tarefa ao card:", cardId);
     console.log("📝 [handleAdicionarTarefa] Dados:", dados);
 
     try {
@@ -204,7 +230,6 @@ const Planejamento = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
-      {/* Conteúdo principal (Header e Footer já vêm do Layout) */}
       <div className="container mx-auto px-4 py-8">
         {/* Cabeçalho da Página */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
@@ -260,12 +285,52 @@ const Planejamento = () => {
           </div>
         )}
 
+        {/* 🔥 FILTROS */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          {/* Filtro de Período */}
+          <select
+            value={filtroPeriodo}
+            onChange={(e) => setFiltroPeriodo(e.target.value)}
+            className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 cursor-pointer"
+          >
+            <option value="todas">📅 Todas as tarefas</option>
+            <option value="semana">📅 Última semana</option>
+            <option value="15dias">📅 Últimos 15 dias</option>
+            <option value="mes">📅 Último mês</option>
+          </select>
+          
+          {/* Filtro de Status */}
+          <select
+            value={filtroStatus}
+            onChange={(e) => setFiltroStatus(e.target.value)}
+            className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 cursor-pointer"
+          >
+            <option value="todos">📊 Todos os status</option>
+            <option value="pendente">⏳ Pendente</option>
+            <option value="concluida">✅ Concluída</option>
+            <option value="atrasada">⚠️ Atrasada</option>
+          </select>
+          
+          {/* Botão para limpar filtros */}
+          {(filtroPeriodo !== 'todas' || filtroStatus !== 'todos') && (
+            <button
+              onClick={() => {
+                setFiltroPeriodo('todas');
+                setFiltroStatus('todos');
+              }}
+              className="px-3 py-2 rounded-lg text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            >
+              Limpar filtros
+            </button>
+          )}
+        </div>
+
         {/* Grid de Cards */}
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cdm-500" />
           </div>
-        ) : cards.length === 0 ? (
+        ) : cardsFiltrados.length === 0 ? (
           <div className="text-center py-16 glass-card rounded-2xl">
             <LayoutGrid className="w-16 h-16 mx-auto mb-4 text-gray-400" />
             <p className="text-gray-500 dark:text-gray-400">
@@ -279,7 +344,7 @@ const Planejamento = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {cards.map((card, index) => (
+            {cardsFiltrados.map((card, index) => (
               <CardPlanejamento
                 key={card.id}
                 card={card}

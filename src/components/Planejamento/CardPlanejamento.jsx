@@ -16,6 +16,13 @@ const CardPlanejamento = ({ card, isAdmin, onUpdate, onDelete, onToggleTarefa, o
   const [isHovered, setIsHovered] = useState(false);
   
   const tarefas = card.tarefas || [];
+  
+  // 🔥 ORDENAÇÃO: Atrasadas → Em andamento → Concluídas
+  const tarefasOrdenadas = [...tarefas].sort((a, b) => {
+    const ordem = { atrasada: 0, pendente: 1, concluida: 2 };
+    return ordem[a.status] - ordem[b.status];
+  });
+  
   const totalTarefas = tarefas.length;
   const concluidas = tarefas.filter(t => t.status === 'concluida').length;
   const progresso = totalTarefas > 0 ? (concluidas / totalTarefas) * 100 : 0;
@@ -164,7 +171,7 @@ const CardPlanejamento = ({ card, isAdmin, onUpdate, onDelete, onToggleTarefa, o
         </div>
         
         <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1 custom-scrollbar">
-          {tarefas.length === 0 ? (
+          {tarefasOrdenadas.length === 0 ? (
             <div className="text-center py-6">
               <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                 <Calendar className="w-6 h-6 text-gray-300" />
@@ -175,7 +182,7 @@ const CardPlanejamento = ({ card, isAdmin, onUpdate, onDelete, onToggleTarefa, o
               )}
             </div>
           ) : (
-            tarefas.slice(0, isExpanded ? undefined : 3).map(tarefa => (
+            tarefasOrdenadas.slice(0, isExpanded ? undefined : 3).map(tarefa => (
               <TarefaItem
                 key={tarefa.id}
                 tarefa={tarefa}
