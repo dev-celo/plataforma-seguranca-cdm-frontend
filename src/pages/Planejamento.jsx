@@ -82,13 +82,6 @@ const Planejamento = () => {
       const temTarefaNoPeriodo = tarefasCard.some(t => new Date(t.createdAt) >= dataLimite);
       if (!temTarefaNoPeriodo) return false;
     }
-    
-    // Filtro de status
-    if (filtroStatus !== 'todos') {
-      const temTarefaComStatus = tarefasCard.some(t => t.status === filtroStatus);
-      if (!temTarefaComStatus) return false;
-    }
-    
     return true;
   });
 
@@ -349,6 +342,7 @@ const Planejamento = () => {
                 key={card.id}
                 card={card}
                 isAdmin={isAdmin}
+                filtroStatus={filtroStatus}
                 onUpdate={() => handleEditarCard(card)}
                 onDelete={handleExcluirCard}
                 onToggleTarefa={handleToggleTarefa}

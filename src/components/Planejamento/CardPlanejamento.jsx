@@ -1,13 +1,13 @@
 // components/Planejamento/CardPlanejamento.jsx
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Mail, Briefcase, Plus, Edit2, Trash2, TrendingUp, Calendar } from 'lucide-react';
 import TarefaItem from './TarefaItem';
 import ModalTarefa from './ModalTarefa';
 import ConfirmDelete from './ConfirmDelete';
 import { useAuth } from '../../contexts/AuthContext';
 
-const CardPlanejamento = ({ card, isAdmin, onUpdate, onDelete, onToggleTarefa, onAddTarefa, onEditTarefa, onDeleteTarefa, index }) => {
+const CardPlanejamento = ({ card, isAdmin, filtroStatus, onUpdate, onDelete, onToggleTarefa, onAddTarefa, onEditTarefa, onDeleteTarefa, index }) => {
   const { user } = useAuth();
   const [modalTarefaOpen, setModalTarefaOpen] = useState(false);
   const [tarefaEditando, setTarefaEditando] = useState(null);
@@ -17,20 +17,25 @@ const CardPlanejamento = ({ card, isAdmin, onUpdate, onDelete, onToggleTarefa, o
   
   const tarefas = card.tarefas || [];
   
-  // 🔥 ORDENAÇÃO: Atrasadas → Em andamento → Concluídas
-  const tarefasOrdenadas = [...tarefas].sort((a, b) => {
+  // 🔥 FILTRAR TAREFAS POR STATUS
+  const tarefasFiltradas = filtroStatus === 'todos' 
+    ? tarefas 
+    : tarefas.filter(t => t.status === filtroStatus);
+  
+  // 🔥 ORDENAR tarefas filtradas (Atrasadas → Em andamento → Concluídas)
+  const tarefasOrdenadas = [...tarefasFiltradas].sort((a, b) => {
     const ordem = { atrasada: 0, pendente: 1, concluida: 2 };
     return ordem[a.status] - ordem[b.status];
   });
   
+  // Estatísticas baseadas nas tarefas ORIGINAIS (não filtradas)
   const totalTarefas = tarefas.length;
   const concluidas = tarefas.filter(t => t.status === 'concluida').length;
+  const tarefasAtrasadas = tarefas.filter(t => t.status === 'atrasada').length;
   const progresso = totalTarefas > 0 ? (concluidas / totalTarefas) * 100 : 0;
   
   const isOwner = user?.email === card.email;
   const canAddTask = isAdmin || isOwner;
-  
-  const tarefasAtrasadas = tarefas.filter(t => t.status === 'atrasada').length;
   
   const stats = [
     { label: 'TOTAL', value: totalTarefas, color: 'text-gray-600 dark:text-gray-400' },
@@ -78,7 +83,7 @@ const CardPlanejamento = ({ card, isAdmin, onUpdate, onDelete, onToggleTarefa, o
         border: '1px solid #e2e8f0',
       }}
     >
-      {/* Efeito de gradiente sutil no hover (sem atrapalhar legibilidade) */}
+      {/* Efeito de gradiente sutil no hover */}
       <div 
         className={`absolute inset-0 transition-opacity duration-500 pointer-events-none ${
           isHovered ? 'opacity-100' : 'opacity-0'
