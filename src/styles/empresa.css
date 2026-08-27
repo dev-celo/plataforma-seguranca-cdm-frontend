@@ -1,0 +1,43 @@
+/* styles/empresa.css */
+:root {
+  /* Cores padrão da GAMA */
+  --gama-primary: #FFC400;
+  --gama-primary-dark: #D9A600;
+  --gama-primary-light: #FFF3B0;
+  --gama-black: #050D10;
+  --gama-dark: #20272B;
+  --gama-gray: #E9ECEF;
+  --gama-white: #FFFFFF;
+}
+
+/* Botões da GAMA */
+.btn-gama {
+  background-color: var(--gama-primary);
+  color: var(--gama-black);
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-gama:hover {
+  background-color: var(--gama-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 196, 0, 0.3);
+}
+
+.btn-gama-outline {
+  background: transparent;
+  color: var(--gama-primary);
+  border: 2px solid var(--gama-primary);
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-gama-outline:hover {
+  background: var(--gama-primary);
+  color: var(--gama-black);
+}
